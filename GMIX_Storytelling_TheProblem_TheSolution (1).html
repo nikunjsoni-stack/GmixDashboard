@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GMIX — The Story</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════ RESET & TOKENS ═══════════════════════ */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:   #060d1c;
+  --ink2:  #091525;
+  --ink3:  #0d1e35;
+  --ink4:  #122440;
+  --cyan:  #00c8ff;
+  --cyanD: #0891b2;
+  --gold:  #f5a623;
+  --goldD: #c47d0c;
+  --green: #22c55e;
+  --red:   #ef4444;
+  --amber: #f59e0b;
+  --purple:#8b5cf6;
+  --snow:  #e8f4ff;
+  --mist:  #94a3b8;
+  --fog:   #475569;
+  --border:#1a3455;
+  --fontH: 'Playfair Display', Georgia, serif;
+  --fontB: 'DM Sans', sans-serif;
+  --fontM: 'DM Mono', monospace;
+}
+
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--fontB);
+  background:var(--ink);
+  color:var(--snow);
+  overflow-x:hidden;
+  cursor:default;
+}
+
+/* ═══════════════════════ SCROLLBAR ═══════════════════════ */
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:var(--ink)}
+::-webkit-scrollbar-thumb{background:var(--cyan);border-radius:2px}
+
+/* ═══════════════════════ PROGRESS BAR ═══════════════════════ */
+#progress{
+  position:fixed;top:0;left:0;height:2px;
+  background:linear-gradient(90deg,var(--cyan),var(--gold));
+  z-index:999;transition:width .1s linear;
+}
+
+/* ═══════════════════════ NAV ═══════════════════════ */
+nav{
+  position:fixed;top:0;left:0;right:0;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:16px 40px;z-index:100;
+  background:linear-gradient(180deg,rgba(6,13,28,.95) 0%,transparent 100%);
+  backdrop-filter:blur(8px);
+}
+.nav-logo{
+  font-family:var(--fontM);font-size:15px;font-weight:500;
+  color:var(--cyan);letter-spacing:3px;
+}
+.nav-links{display:flex;gap:28px}
+.nav-links a{
+  font-size:12px;color:var(--mist);text-decoration:none;
+  letter-spacing:1.5px;text-transform:uppercase;
+  transition:color .2s;font-weight:500;
+}
+.nav-links a:hover{color:var(--cyan)}
+
+/* ═══════════════════════ HERO ═══════════════════════ */
+.hero{
+  min-height:100vh;
+  display:flex;flex-direction:column;
+  justify-content:center;align-items:center;
+  text-align:center;
+  padding:80px 40px 60px;
+  position:relative;overflow:hidden;
+}
+.hero-grid{
+  position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(0,200,255,.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,200,255,.04) 1px,transparent 1px);
+  background-size:60px 60px;
+  mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 30%,transparent 100%);
+}
+.hero-glow{
+  position:absolute;top:20%;left:50%;transform:translate(-50%,-50%);
+  width:600px;height:600px;
+  background:radial-gradient(ellipse,rgba(0,200,255,.08) 0%,transparent 70%);
+  pointer-events:none;
+}
+.hero-eyebrow{
+  font-family:var(--fontM);font-size:11px;letter-spacing:4px;
+  color:var(--cyan);text-transform:uppercase;margin-bottom:24px;
+  opacity:0;animation:fadeUp .8s ease .3s forwards;
+}
+.hero-title{
+  font-family:var(--fontH);font-size:clamp(48px,8vw,96px);
+  font-weight:900;line-height:1.0;
+  margin-bottom:28px;
+  opacity:0;animation:fadeUp .9s ease .5s forwards;
+}
+.hero-title .line1{color:var(--snow)}
+.hero-title .line2{color:var(--cyan);font-style:italic}
+.hero-subtitle{
+  font-size:18px;font-weight:300;color:var(--mist);
+  max-width:620px;line-height:1.8;margin-bottom:48px;
+  opacity:0;animation:fadeUp .9s ease .7s forwards;
+}
+.hero-chapters{
+  display:flex;gap:24px;justify-content:center;flex-wrap:wrap;
+  opacity:0;animation:fadeUp .9s ease .9s forwards;
+}
+.hero-chapter{
+  padding:10px 24px;border:1px solid var(--border);
+  border-radius:30px;font-size:12px;letter-spacing:1.5px;
+  text-transform:uppercase;color:var(--mist);
+  background:rgba(255,255,255,.03);backdrop-filter:blur(4px);
+  cursor:pointer;transition:all .25s;text-decoration:none;
+  display:inline-block;
+}
+.hero-chapter:hover{border-color:var(--cyan);color:var(--cyan);background:rgba(0,200,255,.06)}
+.hero-chapter.gold-ch{border-color:rgba(245,166,35,.3);color:var(--gold)}
+.hero-chapter.gold-ch:hover{border-color:var(--gold);background:rgba(245,166,35,.06)}
+.scroll-hint{
+  position:absolute;bottom:32px;left:50%;transform:translateX(-50%);
+  font-size:11px;letter-spacing:2px;color:var(--fog);text-transform:uppercase;
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  animation:bounce 2s infinite;
+}
+.scroll-arrow{width:16px;height:16px;border-right:1px solid var(--fog);border-bottom:1px solid var(--fog);transform:rotate(45deg)}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+@keyframes bounce{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(6px)}}
+
+/* ═══════════════════════ CHAPTER BREAK ═══════════════════════ */
+.chapter-break{
+  position:relative;overflow:hidden;
+  padding:100px 0 80px;
+  display:flex;align-items:center;justify-content:center;
+  text-align:center;
+}
+.chapter-break::before{
+  content:'';position:absolute;inset:0;
+}
+.ch-problem::before{background:radial-gradient(ellipse 60% 100% at 50% 50%,rgba(239,68,68,.07) 0%,transparent 70%)}
+.ch-solution::before{background:radial-gradient(ellipse 60% 100% at 50% 50%,rgba(0,200,255,.07) 0%,transparent 70%)}
+.chapter-break-inner{position:relative;z-index:1}
+.ch-number{
+  font-family:var(--fontM);font-size:11px;letter-spacing:4px;
+  text-transform:uppercase;margin-bottom:16px;
+  opacity:.6;
+}
+.ch-problem .ch-number{color:var(--red)}
+.ch-solution .ch-number{color:var(--cyan)}
+.ch-title{
+  font-family:var(--fontH);
+  font-size:clamp(52px,7vw,88px);
+  font-weight:900;line-height:1.05;
+  max-width:900px;
+  margin:0 auto 24px;
+}
+.ch-problem .ch-title{color:var(--snow)}
+.ch-solution .ch-title{color:var(--cyan)}
+.ch-deck{
+  font-size:17px;font-weight:300;color:var(--mist);
+  max-width:680px;margin:0 auto;line-height:1.8;
+}
+.ch-rule{
+  width:80px;height:2px;margin:32px auto 0;
+}
+.ch-problem .ch-rule{background:var(--red)}
+.ch-solution .ch-rule{background:var(--cyan)}
+
+/* ═══════════════════════ SECTION / PROSE ═══════════════════════ */
+.section{
+  max-width:820px;margin:0 auto;padding:60px 40px;
+  position:relative;
+}
+.section.wide{max-width:1100px}
+.section.full{max-width:100%;padding:60px 0}
+
+.prose-lead{
+  font-family:var(--fontH);font-size:clamp(22px,3vw,30px);
+  font-weight:400;line-height:1.55;color:var(--snow);
+  margin-bottom:32px;
+}
+.prose-lead em{color:var(--cyan);font-style:italic}
+.prose-lead.red em{color:var(--red)}
+.prose-lead.gold em{color:var(--gold)}
+
+.prose{
+  font-size:17px;font-weight:300;line-height:1.9;color:var(--mist);
+  margin-bottom:28px;
+}
+.prose strong{color:var(--snow);font-weight:500}
+.prose em{color:var(--cyan);font-style:normal}
+
+/* ═══════════════════════ PULL QUOTE ═══════════════════════ */
+.pull-quote{
+  border-left:3px solid var(--cyan);
+  padding:20px 28px;margin:40px 0;
+  background:rgba(0,200,255,.04);border-radius:0 8px 8px 0;
+}
+.pull-quote.red{border-left-color:var(--red);background:rgba(239,68,68,.04)}
+.pull-quote.gold{border-left-color:var(--gold);background:rgba(245,166,35,.04)}
+.pull-quote.green{border-left-color:var(--green);background:rgba(34,197,94,.04)}
+.pq-text{
+  font-family:var(--fontH);font-size:clamp(18px,2.5vw,24px);
+  font-style:italic;color:var(--snow);line-height:1.5;margin-bottom:8px;
+}
+.pq-attr{font-size:12px;color:var(--fog);letter-spacing:1px;text-transform:uppercase}
+
+/* ═══════════════════════ STAT CALLOUTS ═══════════════════════ */
+.stat-band{
+  background:var(--ink3);
+  border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+  padding:56px 40px;
+  display:grid;grid-template-columns:repeat(4,1fr);gap:2px;
+  position:relative;overflow:hidden;
+}
+.stat-band::before{
+  content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:200px;height:1px;
+  background:linear-gradient(90deg,transparent,var(--cyan),transparent);
+}
+.stat-cell{
+  text-align:center;padding:20px;
+  border-right:1px solid var(--border);
+}
+.stat-cell:last-child{border-right:none}
+.stat-num{
+  font-family:var(--fontM);font-size:clamp(32px,4vw,52px);
+  font-weight:500;line-height:1;margin-bottom:10px;
+  display:block;
+}
+.stat-label{
+  font-size:11px;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--fog);font-weight:500;
+}
+.stat-sub{font-size:11px;color:var(--fog);margin-top:6px;font-style:italic}
+
+/* ═══════════════════════ SCENE CARDS ═══════════════════════ */
+.scene-grid{
+  display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;
+  background:var(--border);
+  margin:0;
+}
+.scene-card{
+  background:var(--ink2);padding:40px 36px;
+  position:relative;overflow:hidden;
+}
+.scene-card::after{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+}
+.sc-red::after{background:var(--red)}
+.sc-amber::after{background:var(--amber)}
+.sc-fog::after{background:var(--fog)}
+.sc-cyan::after{background:var(--cyan)}
+.sc-green::after{background:var(--green)}
+.sc-purple::after{background:var(--purple)}
+.sc-gold::after{background:var(--gold)}
+.scene-icon{font-size:32px;margin-bottom:18px;display:block}
+.scene-title{
+  font-family:var(--fontH);font-size:20px;font-weight:700;
+  margin-bottom:12px;
+}
+.sc-red .scene-title{color:var(--red)}
+.sc-amber .scene-title{color:var(--amber)}
+.sc-fog .scene-title{color:var(--mist)}
+.sc-cyan .scene-title{color:var(--cyan)}
+.sc-green .scene-title{color:var(--green)}
+.sc-purple .scene-title{color:var(--purple)}
+.sc-gold .scene-title{color:var(--gold)}
+.scene-body{font-size:14px;color:var(--mist);line-height:1.8;font-weight:300}
+
+/* ═══════════════════════ JOURNEY FLOW ═══════════════════════ */
+.journey-section{
+  padding:80px 40px;
+  background:var(--ink3);
+  border-top:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+}
+.journey-section h2{
+  font-family:var(--fontH);font-size:36px;font-weight:700;
+  text-align:center;margin-bottom:12px;color:var(--snow);
+}
+.journey-section .j-sub{
+  text-align:center;font-size:15px;color:var(--mist);
+  margin-bottom:48px;font-weight:300;
+}
+.journey-flow{
+  display:flex;align-items:flex-start;gap:0;
+  max-width:1100px;margin:0 auto;
+  overflow-x:auto;padding-bottom:16px;
+}
+.j-node{display:flex;flex-direction:column;align-items:center;flex:1;min-width:160px}
+.j-box{
+  border-radius:8px;padding:16px 12px;text-align:center;
+  width:140px;transition:transform .2s;cursor:default;
+  border:1px solid var(--border);
+}
+.j-box:hover{transform:translateY(-4px)}
+.j-ch{font-family:var(--fontM);font-size:13px;font-weight:500;margin-bottom:6px}
+.j-vol{font-size:11px;color:var(--fog);margin-bottom:8px}
+.j-rate{font-family:var(--fontM);font-size:20px;font-weight:500}
+.j-arrow-wrap{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding-top:22px;min-width:60px;
+}
+.j-arrow-line{
+  width:100%;height:1px;position:relative;
+  background:linear-gradient(90deg,var(--border),var(--cyan));
+}
+.j-arrow-line::after{
+  content:'▶';position:absolute;right:-8px;top:-9px;
+  color:var(--cyan);font-size:12px;
+}
+.drop-tag{
+  font-family:var(--fontM);font-size:9px;font-weight:500;
+  color:var(--red);background:rgba(239,68,68,.1);
+  border:1px solid rgba(239,68,68,.2);border-radius:3px;
+  padding:2px 6px;margin-top:8px;letter-spacing:.5px;
+}
+.friction-tag{
+  font-family:var(--fontM);font-size:9px;
+  color:var(--amber);background:rgba(245,158,11,.1);
+  border:1px solid rgba(245,158,11,.2);border-radius:3px;
+  padding:2px 6px;margin-top:4px;letter-spacing:.5px;
+}
+
+/* ═══════════════════════ HMW PILLARS ═══════════════════════ */
+.hmw-section{padding:80px 40px;background:var(--ink)}
+.hmw-section h2{font-family:var(--fontH);font-size:36px;font-weight:700;text-align:center;margin-bottom:12px}
+.hmw-section .h-sub{text-align:center;color:var(--mist);font-size:15px;margin-bottom:56px;font-weight:300}
+.hmw-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:1100px;margin:0 auto}
+.hmw-card{
+  background:var(--ink3);border-radius:12px;padding:32px 28px;
+  border:1px solid var(--border);
+  position:relative;overflow:hidden;transition:transform .25s;
+}
+.hmw-card:hover{transform:translateY(-4px)}
+.hmw-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+}
+.hc1::before{background:var(--cyan)}
+.hc2::before{background:var(--gold)}
+.hc3::before{background:var(--purple)}
+.hmw-label{
+  font-family:var(--fontM);font-size:10px;letter-spacing:2px;
+  text-transform:uppercase;margin-bottom:8px;font-weight:500;
+}
+.hc1 .hmw-label{color:var(--cyan)}
+.hc2 .hmw-label{color:var(--gold)}
+.hc3 .hmw-label{color:var(--purple)}
+.hmw-icon{font-size:28px;margin-bottom:14px;display:block}
+.hmw-title{font-family:var(--fontH);font-size:22px;font-weight:700;margin-bottom:14px;color:var(--snow)}
+.hmw-q{
+  font-size:14px;font-style:italic;color:var(--mist);
+  line-height:1.7;margin-bottom:20px;border-left:2px solid var(--border);padding-left:14px;
+}
+.hmw-stats{display:flex;gap:10px;flex-wrap:wrap}
+.hm-stat{
+  background:var(--ink2);border-radius:6px;padding:8px 12px;
+  text-align:center;flex:1;min-width:70px;border:1px solid var(--border);
+}
+.hm-val{font-family:var(--fontM);font-size:18px;font-weight:500}
+.hc1 .hm-val{color:var(--cyan)}
+.hc2 .hm-val{color:var(--gold)}
+.hc3 .hm-val{color:var(--purple)}
+.hm-lbl{font-size:9px;color:var(--fog);text-transform:uppercase;letter-spacing:.5px;margin-top:3px}
+.hmw-score{margin-top:16px}
+.hs-row{display:flex;justify-content:space-between;font-size:11px;color:var(--fog);margin-bottom:4px}
+.hs-track{height:4px;background:var(--ink2);border-radius:2px;overflow:hidden}
+.hs-fill{height:100%;border-radius:2px;transition:width 1.5s ease}
+.hc1 .hs-fill{background:var(--cyan)}
+.hc2 .hs-fill{background:var(--gold)}
+.hc3 .hs-fill{background:var(--purple)}
+
+/* ═══════════════════════ IMPACT NUMBERS ═══════════════════════ */
+.impact-section{
+  background:var(--ink3);
+  border-top:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+  padding:80px 40px;
+}
+.impact-section h2{
+  font-family:var(--fontH);font-size:36px;font-weight:700;
+  text-align:center;margin-bottom:12px;color:var(--snow);
+}
+.impact-section .i-sub{text-align:center;color:var(--mist);font-size:15px;margin-bottom:56px}
+.impact-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;max-width:960px;margin:0 auto}
+.impact-card{
+  background:var(--ink2);border-radius:12px;padding:28px;
+  border:1px solid var(--border);display:flex;gap:20px;align-items:flex-start;
+  transition:border-color .2s;
+}
+.impact-card:hover{border-color:var(--cyan)}
+.ic-icon{font-size:28px;flex-shrink:0;margin-top:2px}
+.ic-num{
+  font-family:var(--fontM);font-size:clamp(28px,3vw,40px);
+  font-weight:500;line-height:1;margin-bottom:6px;
+}
+.ic-gold .ic-num{color:var(--gold)}
+.ic-cyan .ic-num{color:var(--cyan)}
+.ic-green .ic-num{color:var(--green)}
+.ic-purple .ic-num{color:var(--purple)}
+.ic-label{font-size:12px;color:var(--mist);text-transform:uppercase;letter-spacing:1px;font-weight:500}
+.ic-desc{font-size:13px;color:var(--fog);margin-top:8px;line-height:1.6;font-weight:300}
+
+/* ═══════════════════════ TRANSITION MOMENT ═══════════════════════ */
+.transition-moment{
+  min-height:60vh;
+  display:flex;flex-direction:column;
+  justify-content:center;align-items:center;
+  text-align:center;padding:80px 40px;
+  position:relative;overflow:hidden;
+  background:var(--ink);
+}
+.tm-glow{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:800px;height:400px;
+  background:radial-gradient(ellipse,rgba(0,200,255,.06) 0%,transparent 70%);
+}
+.tm-label{
+  font-family:var(--fontM);font-size:11px;letter-spacing:4px;
+  color:var(--fog);text-transform:uppercase;margin-bottom:24px;
+}
+.tm-title{
+  font-family:var(--fontH);font-size:clamp(36px,5vw,64px);
+  font-weight:700;max-width:800px;line-height:1.2;
+  margin-bottom:24px;color:var(--snow);
+}
+.tm-title em{color:var(--cyan);font-style:normal}
+.tm-body{
+  font-size:18px;font-weight:300;color:var(--mist);
+  max-width:640px;line-height:1.8;
+}
+
+/* ═══════════════════════ CAPABILITY FLOW ═══════════════════════ */
+.cap-section{padding:80px 40px;max-width:1100px;margin:0 auto}
+.cap-section h2{font-family:var(--fontH);font-size:36px;font-weight:700;margin-bottom:12px;color:var(--snow)}
+.cap-section .c-sub{font-size:15px;color:var(--mist);margin-bottom:48px;font-weight:300}
+.cap-list{display:flex;flex-direction:column;gap:2px}
+.cap-item{
+  display:flex;align-items:flex-start;gap:28px;
+  padding:28px 32px;background:var(--ink2);
+  border-left:3px solid var(--border);
+  transition:border-color .2s,background .2s;cursor:default;
+}
+.cap-item:hover{border-left-color:var(--cyan);background:var(--ink3)}
+.cap-item:nth-child(1){border-left-color:var(--cyan)}
+.cap-item:nth-child(2){border-left-color:var(--gold)}
+.cap-item:nth-child(3){border-left-color:var(--green)}
+.cap-item:nth-child(4){border-left-color:var(--purple)}
+.cap-item:nth-child(5){border-left-color:var(--amber)}
+.cap-item:nth-child(6){border-left-color:var(--red)}
+.cap-num{
+  font-family:var(--fontM);font-size:32px;font-weight:500;
+  color:var(--fog);flex-shrink:0;line-height:1;min-width:48px;
+  padding-top:4px;
+}
+.cap-content{}
+.cap-title{font-family:var(--fontH);font-size:20px;font-weight:700;margin-bottom:8px;color:var(--snow)}
+.cap-body{font-size:14px;color:var(--mist);line-height:1.8;font-weight:300}
+.cap-tag{
+  display:inline-block;margin-top:12px;
+  font-family:var(--fontM);font-size:10px;letter-spacing:1.5px;
+  padding:3px 10px;border-radius:20px;text-transform:uppercase;
+}
+.tag-cyan{background:rgba(0,200,255,.1);color:var(--cyan);border:1px solid rgba(0,200,255,.2)}
+.tag-gold{background:rgba(245,166,35,.1);color:var(--gold);border:1px solid rgba(245,166,35,.2)}
+.tag-green{background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.2)}
+.tag-purple{background:rgba(139,92,246,.1);color:var(--purple);border:1px solid rgba(139,92,246,.2)}
+
+/* ═══════════════════════ BEFORE/AFTER ═══════════════════════ */
+.ba-section{
+  display:grid;grid-template-columns:1fr 1px 1fr;
+  background:var(--ink3);
+  border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+}
+.ba-divider{background:var(--border);position:relative}
+.ba-divider::after{
+  content:'VS';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  background:var(--ink3);padding:8px 6px;
+  font-family:var(--fontM);font-size:12px;color:var(--fog);letter-spacing:2px;
+  writing-mode:vertical-rl;text-orientation:mixed;
+}
+.ba-col{padding:60px 50px}
+.ba-label{
+  font-family:var(--fontM);font-size:11px;letter-spacing:3px;
+  text-transform:uppercase;margin-bottom:24px;font-weight:500;
+}
+.ba-before .ba-label{color:var(--red)}
+.ba-after  .ba-label{color:var(--green)}
+.ba-title{
+  font-family:var(--fontH);font-size:28px;font-weight:700;
+  margin-bottom:8px;
+}
+.ba-before .ba-title{color:var(--snow)}
+.ba-after  .ba-title{color:var(--snow)}
+.ba-hrs{
+  font-family:var(--fontM);font-size:72px;font-weight:500;
+  line-height:1;margin:20px 0 8px;
+}
+.ba-before .ba-hrs{color:var(--red)}
+.ba-after  .ba-hrs{color:var(--green)}
+.ba-hrsub{font-size:14px;color:var(--fog);margin-bottom:28px}
+.ba-list{list-style:none;display:flex;flex-direction:column;gap:12px}
+.ba-list li{
+  display:flex;align-items:flex-start;gap:10px;
+  font-size:14px;color:var(--mist);line-height:1.5;font-weight:300;
+}
+.ba-list li span.ico{font-size:14px;flex-shrink:0;margin-top:1px}
+
+/* ═══════════════════════ CLOSING CTA ═══════════════════════ */
+.cta-section{
+  min-height:80vh;
+  display:flex;flex-direction:column;
+  justify-content:center;align-items:center;
+  text-align:center;padding:100px 40px;
+  position:relative;overflow:hidden;
+  background:var(--ink);
+}
+.cta-glow{
+  position:absolute;inset:0;
+  background:radial-gradient(ellipse 50% 60% at 50% 50%,rgba(0,200,255,.06) 0%,transparent 70%);
+}
+.cta-eyebrow{font-family:var(--fontM);font-size:11px;letter-spacing:4px;color:var(--cyan);text-transform:uppercase;margin-bottom:20px;opacity:.7}
+.cta-title{
+  font-family:var(--fontH);font-size:clamp(40px,6vw,80px);
+  font-weight:900;max-width:800px;line-height:1.1;
+  margin-bottom:24px;color:var(--snow);position:relative;z-index:1;
+}
+.cta-title em{color:var(--gold);font-style:italic}
+.cta-body{
+  font-size:18px;font-weight:300;color:var(--mist);
+  max-width:580px;line-height:1.8;margin-bottom:48px;position:relative;z-index:1;
+}
+.cta-stats{
+  display:flex;gap:48px;justify-content:center;flex-wrap:wrap;
+  margin-bottom:52px;position:relative;z-index:1;
+}
+.cta-stat{}
+.cta-stat-num{font-family:var(--fontM);font-size:36px;font-weight:500;display:block;margin-bottom:4px}
+.cta-stat:nth-child(1) .cta-stat-num{color:var(--gold)}
+.cta-stat:nth-child(2) .cta-stat-num{color:var(--cyan)}
+.cta-stat:nth-child(3) .cta-stat-num{color:var(--purple)}
+.cta-stat-lbl{font-size:11px;color:var(--fog);letter-spacing:1.5px;text-transform:uppercase}
+.cta-actions{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;position:relative;z-index:1}
+.cta-btn{
+  padding:14px 32px;border-radius:6px;font-size:13px;font-weight:500;
+  letter-spacing:1px;text-transform:uppercase;cursor:pointer;
+  text-decoration:none;display:inline-block;transition:all .2s;
+  font-family:var(--fontB);
+}
+.btn-primary{background:var(--cyan);color:var(--ink);border:none}
+.btn-primary:hover{background:#38d4ff;transform:translateY(-2px)}
+.btn-outline{background:transparent;color:var(--snow);border:1px solid var(--border)}
+.btn-outline:hover{border-color:var(--snow);transform:translateY(-2px)}
+
+/* ═══════════════════════ FOOTER ═══════════════════════ */
+footer{
+  background:var(--ink2);border-top:1px solid var(--border);
+  padding:28px 40px;display:flex;justify-content:space-between;
+  align-items:center;flex-wrap:wrap;gap:12px;
+}
+.footer-logo{font-family:var(--fontM);font-size:13px;color:var(--cyan);letter-spacing:2px}
+.footer-note{font-size:11px;color:var(--fog)}
+.footer-pillars{display:flex;gap:20px}
+.footer-pillars span{font-size:11px;color:var(--fog);letter-spacing:.5px}
+
+/* ═══════════════════════ SCROLL REVEAL ═══════════════════════ */
+.reveal{
+  opacity:0;transform:translateY(30px);
+  transition:opacity .7s ease,transform .7s ease;
+}
+.reveal.visible{opacity:1;transform:none}
+.reveal-delay-1{transition-delay:.1s}
+.reveal-delay-2{transition-delay:.2s}
+.reveal-delay-3{transition-delay:.3s}
+.reveal-delay-4{transition-delay:.4s}
+
+/* ═══════════════════════ DECORATIVE ═══════════════════════ */
+.section-rule{
+  width:60px;height:1px;background:var(--border);margin:48px auto;
+}
+.mono-label{
+  font-family:var(--fontM);font-size:11px;letter-spacing:3px;
+  color:var(--fog);text-transform:uppercase;display:block;
+  margin-bottom:12px;
+}
+.drop-number{
+  font-family:var(--fontH);font-size:clamp(80px,10vw,140px);
+  font-weight:900;line-height:.9;color:rgba(239,68,68,.06);
+  position:absolute;right:40px;top:50%;transform:translateY(-50%);
+  pointer-events:none;user-select:none;letter-spacing:-4px;
+}
+.shine-text{
+  background:linear-gradient(90deg,var(--snow),var(--cyan),var(--snow));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+
+/* ═══════════════════════ RESPONSIVE ═══════════════════════ */
+@media(max-width:768px){
+  .scene-grid{grid-template-columns:1fr}
+  .stat-band{grid-template-columns:repeat(2,1fr)}
+  .stat-cell:nth-child(2){border-right:none}
+  .hmw-grid{grid-template-columns:1fr}
+  .impact-grid{grid-template-columns:1fr}
+  .ba-section{grid-template-columns:1fr}
+  .ba-divider{display:none}
+  nav{padding:14px 20px}
+  .nav-links{display:none}
+  .section{padding:48px 20px}
+  .journey-flow{flex-wrap:nowrap}
+  footer{flex-direction:column;text-align:center}
+}
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+
+<!-- ═══════════ NAV ═══════════ -->
+<nav>
+  <div class="nav-logo">⬡ GMIX</div>
+  <div class="nav-links">
+    <a href="#problem">The Problem</a>
+    <a href="#solution">The Solution</a>
+    <a href="#pillars">HMW Pillars</a>
+    <a href="#impact">The Impact</a>
+  </div>
+</nav>
+
+<!-- ═══════════ HERO ═══════════ -->
+<section class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-eyebrow">A Story in Two Acts</div>
+  <h1 class="hero-title">
+    <span class="line1">The World Was<br>Sending Blind.</span>
+    <span class="line2">Then Came GMIX.</span>
+  </h1>
+  <p class="hero-subtitle">
+    Every day, enterprises send billions of messages across SMS, RCS, WhatsApp, Email, and Voice — and have almost no idea where their customers disappear along the way. This is that story.
+  </p>
+  <div class="hero-chapters">
+    <a href="#problem" class="hero-chapter">Act I — The Problem</a>
+    <a href="#solution" class="hero-chapter gold-ch">Act II — The Solution</a>
+  </div>
+  <div class="scroll-hint">
+    <span>Scroll to begin</span>
+    <div class="scroll-arrow"></div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     ACT I — THE PROBLEM
+═══════════════════════════════════════════ -->
+<div id="problem"></div>
+<div class="chapter-break ch-problem reveal">
+  <div class="chapter-break-inner">
+    <div class="ch-number">Act I</div>
+    <h2 class="ch-title">The Old World of<br>Telecom Was Broken.</h2>
+    <p class="ch-deck">Not because the technology failed. Because no one could see what was happening inside the journey between the send and the reply.</p>
+    <div class="ch-rule"></div>
+  </div>
+</div>
+
+<!-- Scene setting -->
+<section class="section reveal">
+  <p class="prose-lead red">Picture <em>one billion messages</em> sent today. Across six continents. Through fifteen operators. Across five different channels. And almost no one knows where the customers go.</p>
+  <p class="prose">Enterprises had built extraordinary machinery for <strong>sending</strong> messages. They had SMS gateways, WhatsApp Business APIs, RCS platforms, email engines, and voice dialers. They had operator agreements in forty countries. They had campaign managers and delivery reports and SLA spreadsheets.</p>
+  <p class="prose">What they did not have was a clear answer to a simple question: <strong>when a customer moves from one channel to another, what happens to their intent?</strong></p>
+  <div class="pull-quote red">
+    <p class="pq-text">"The moment a journey switched from RCS to SMS fallback — or from WhatsApp to Email — there was a gap. A black hole. And customers fell into it."</p>
+    <p class="pq-attr">The core problem GMIX was built to solve</p>
+  </div>
+  <p class="prose">The data existed — scattered across a dozen platforms, siloed by channel, fragmented by operator. But no one could read it as a single, coherent story. And so, every day, hundreds of thousands of customer interactions simply… vanished.</p>
+</section>
+
+<!-- The 3 Problems -->
+<div class="scene-grid reveal">
+  <div class="scene-card sc-red">
+    <span class="scene-icon">📉</span>
+    <div class="scene-title">Fragmented Data</div>
+    <p class="scene-body">Engagement data lived in silos — one dashboard per channel, one report per operator. There was no unified view of the customer journey. Teams knew the delivery rate for each channel separately, but not what happened when channels collided.</p>
+  </div>
+  <div class="scene-card sc-amber">
+    <span class="scene-icon">⚠️</span>
+    <div class="scene-title">Channel Friction</div>
+    <p class="scene-body">When journeys shifted — RCS to SMS fallback, SMS to WhatsApp, WhatsApp to Email — customers experienced lag, confusion, and re-authentication loops. The handoff was broken. Intent dropped. Conversions were lost in the transition.</p>
+  </div>
+  <div class="scene-card sc-fog">
+    <span class="scene-icon">🕐</span>
+    <div class="scene-title">Reactive Analysis</div>
+    <p class="scene-body">Analytics teams spent 8–10 hours every week manually reviewing campaign reports across disconnected platforms. By the time a problem was identified, it was already too late. The analysis was a post-mortem, not a diagnostic.</p>
+  </div>
+</div>
+
+<!-- The drop-off numbers -->
+<section class="section reveal">
+  <span class="mono-label">The Data Tells the Story</span>
+  <p class="prose-lead red">Industry benchmarks showed <em>5–15% of customers</em> drop off during multi-channel journeys. For an enterprise processing one million interactions per month, that meant losing 100,000 customers — every single month — to friction they could not see.</p>
+</section>
+
+<div class="stat-band reveal">
+  <div class="stat-cell">
+    <span class="stat-num" style="color:var(--red)">100,000</span>
+    <span class="stat-label">Interactions lost / month</span>
+    <div class="stat-sub">At 10% baseline drop-off</div>
+  </div>
+  <div class="stat-cell">
+    <span class="stat-num" style="color:var(--amber)">8–10 hrs</span>
+    <span class="stat-label">Wasted per team / week</span>
+    <div class="stat-sub">Manual report analysis</div>
+  </div>
+  <div class="stat-cell">
+    <span class="stat-num" style="color:var(--red)">5 channels</span>
+    <span class="stat-label">Siloed & unconnected</span>
+    <div class="stat-sub">SMS, RCS, WhatsApp, Email, Voice</div>
+  </div>
+  <div class="stat-cell">
+    <span class="stat-num" style="color:var(--amber)">$0</span>
+    <span class="stat-label">Revenue recovered</span>
+    <div class="stat-sub">Without visibility into drop-off</div>
+  </div>
+</div>
+
+<!-- The Journey Problem -->
+<section class="journey-section reveal" id="journey">
+  <h2>Where the Customers Were Disappearing</h2>
+  <p class="j-sub">A journey starting at 1,000,000 — and what the old world couldn't explain about where 261,645 went.</p>
+  <div class="journey-flow">
+    <div class="j-node">
+      <div class="j-box" style="border-color:var(--cyan);background:rgba(0,200,255,.05)">
+        <div class="j-ch" style="color:var(--cyan)">📱 RCS</div>
+        <div class="j-vol">1,000,000 journeys</div>
+        <div class="j-rate" style="color:var(--cyan)">100%</div>
+      </div>
+    </div>
+    <div class="j-arrow-wrap">
+      <div class="j-arrow-line"></div>
+      <div class="drop-tag">−8% drop</div>
+      <div class="friction-tag">Fallback lag</div>
+    </div>
+    <div class="j-node">
+      <div class="j-box" style="background:rgba(34,197,94,.04)">
+        <div class="j-ch" style="color:var(--green)">💬 SMS</div>
+        <div class="j-vol">920,000 journeys</div>
+        <div class="j-rate" style="color:var(--green)">92%</div>
+      </div>
+    </div>
+    <div class="j-arrow-wrap">
+      <div class="j-arrow-line"></div>
+      <div class="drop-tag">−5% drop</div>
+      <div class="friction-tag">Context loss</div>
+    </div>
+    <div class="j-node">
+      <div class="j-box" style="background:rgba(34,197,94,.04)">
+        <div class="j-ch" style="color:var(--green)">💚 WhatsApp</div>
+        <div class="j-vol">874,000 journeys</div>
+        <div class="j-rate" style="color:var(--green)">87.4%</div>
+      </div>
+    </div>
+    <div class="j-arrow-wrap">
+      <div class="j-arrow-line"></div>
+      <div class="drop-tag">−12% drop</div>
+      <div class="friction-tag">Re-auth friction</div>
+    </div>
+    <div class="j-node">
+      <div class="j-box" style="background:rgba(245,158,11,.04)">
+        <div class="j-ch" style="color:var(--amber)">📧 Email</div>
+        <div class="j-vol">769,120 journeys</div>
+        <div class="j-rate" style="color:var(--amber)">76.9%</div>
+      </div>
+    </div>
+    <div class="j-arrow-wrap">
+      <div class="j-arrow-line"></div>
+      <div class="drop-tag">−4% drop</div>
+      <div class="friction-tag">Timing gap</div>
+    </div>
+    <div class="j-node">
+      <div class="j-box" style="border-color:var(--green);background:rgba(34,197,94,.04)">
+        <div class="j-ch" style="color:var(--green)">📞 Voice</div>
+        <div class="j-vol">738,355 journeys</div>
+        <div class="j-rate" style="color:var(--green)">73.8%</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section reveal">
+  <p class="prose-lead red">The worst transition? <em>WhatsApp to Email.</em> A 12% drop — the biggest single point of abandonment in the entire journey. And no one knew it until GMIX mapped it.</p>
+  <p class="prose">The problem wasn't the operators. It wasn't the platforms. It was the <strong>gaps between them</strong> — the unlit corridors where customers made up their minds to stop, and no one noticed until the revenue report came in a week later, full of numbers that told you what happened but not why, and certainly not <strong>how to fix it</strong>.</p>
+  <div class="pull-quote red">
+    <p class="pq-text">"By the time teams found out a customer had dropped off, the customer had already made a decision. They weren't coming back."</p>
+    <p class="pq-attr">The cost of reactive analytics</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     THE TRANSITION MOMENT
+═══════════════════════════════════════════ -->
+<div class="transition-moment reveal">
+  <div class="tm-glow"></div>
+  <div class="tm-label">The turning point</div>
+  <h2 class="tm-title">
+    The world needed more than faster delivery.<br>It needed <em>intelligence at the seam</em>.
+  </h2>
+  <p class="tm-body">Not another channel. Not another dashboard. Not another reporting tool that told you last week's story. It needed something that could read the journey in real time — and act on what it found.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     ACT II — THE SOLUTION
+═══════════════════════════════════════════ -->
+<div id="solution"></div>
+<div class="chapter-break ch-solution reveal">
+  <div class="chapter-break-inner">
+    <div class="ch-number">Act II</div>
+    <h2 class="ch-title">Introducing GMIX.<br><span class="shine-text">The Intelligence Layer.</span></h2>
+    <p class="ch-deck">GMIX doesn't replace your messaging platform. It sits above it — watching every transition, reading every signal, acting before intent disappears.</p>
+    <div class="ch-rule"></div>
+  </div>
+</div>
+
+<!-- What GMIX Is -->
+<section class="section reveal">
+  <p class="prose-lead">GMIX is not a gateway. It is not a campaign tool. It is an <em>AI-powered insight layer</em> that sits across every channel — watching, learning, and acting on what it finds in real time.</p>
+  <p class="prose">Where the old world produced reports, GMIX produces <strong>predictions</strong>. Where the old world reacted to problems, GMIX <strong>prevents them</strong>. Where the old world connected channels, GMIX connects <strong>the intent behind the channels</strong>.</p>
+  <p class="prose">Built for enterprises processing millions of interactions per month, GMIX turns raw telemetry — delivery rates, latency curves, operator health signals, engagement patterns — into a single operational truth that everyone in the organisation can act on.</p>
+</section>
+
+<!-- Capability List -->
+<div class="cap-section reveal" id="capabilities">
+  <h2>What GMIX Does</h2>
+  <p class="c-sub">Six capabilities that change what's possible when you can see the full journey</p>
+  <div class="cap-list">
+    <div class="cap-item">
+      <div class="cap-num">01</div>
+      <div class="cap-content">
+        <div class="cap-title">Real-Time Cross-Channel Journey Intelligence</div>
+        <p class="cap-body">GMIX tracks every customer journey across RCS, SMS, WhatsApp, Email, and Voice — simultaneously. When a transition happens, GMIX captures it. When intent begins to weaken, GMIX flags it. The journey is no longer five separate data streams. It is one story, told in real time.</p>
+        <span class="cap-tag tag-cyan">Live across 5 channels</span>
+      </div>
+    </div>
+    <div class="cap-item">
+      <div class="cap-num">02</div>
+      <div class="cap-content">
+        <div class="cap-title">AI-Powered Routing Engine with Sub-200ms Failover</div>
+        <p class="cap-body">When Operator X's delivery rate falls to 82%, GMIX doesn't wait for a human to notice. In under 200 milliseconds, it detects the threshold breach, identifies the optimal alternate operator, and reroutes traffic — with zero message loss. Route A showing 3.1s latency? GMIX shifts to Route B: 98% DLR, 1.4s latency, 12% lower cost. Automatically.</p>
+        <span class="cap-tag tag-gold">Failover in &lt;200ms</span>
+      </div>
+    </div>
+    <div class="cap-item">
+      <div class="cap-num">03</div>
+      <div class="cap-content">
+        <div class="cap-title">Predictive Intent Drop-off Detection</div>
+        <p class="cap-body">Using pattern analysis across millions of historical journeys, GMIX identifies which transitions carry the highest abandonment risk — and triggers pre-emptive actions before customers disengage. The WhatsApp-to-Email transition carries a 12% drop-off risk. GMIX now deploys a single-sign token at that exact moment, eliminating re-authentication friction. The result: 20,000 additional completed journeys per month.</p>
+        <span class="cap-tag tag-green">20,000 recovered / month</span>
+      </div>
+    </div>
+    <div class="cap-item">
+      <div class="cap-num">04</div>
+      <div class="cap-content">
+        <div class="cap-title">Fraud Detection & Grey Route Blocking</div>
+        <p class="cap-body">GMIX's AI signature library — trained on 500M+ fraud patterns — identifies suspicious traffic in real time. When an anomalous pattern carries a 98.2% match probability with known A2P fraud signatures, the route is blocked instantly. Zero fraudulent messages delivered. Full audit trail created automatically. Compliance engine notified without human intervention.</p>
+        <span class="cap-tag tag-purple">99.1% spam accuracy</span>
+      </div>
+    </div>
+    <div class="cap-item">
+      <div class="cap-num">05</div>
+      <div class="cap-content">
+        <div class="cap-title">AI Insight Summaries — From 10 Hours to 4</div>
+        <p class="cap-body">What used to take analytics teams 8–10 hours per week — manual report reviews, cross-channel data collation, spreadsheet-based analysis — now surfaces in GMIX's AI insight panel in minutes. Teams save 4–5 hours per week per team, freeing over 200 hours per year that move from reporting into strategic campaign optimization, client QBRs, and innovation.</p>
+        <span class="cap-tag tag-gold">200+ hrs saved / team / year</span>
+      </div>
+    </div>
+    <div class="cap-item">
+      <div class="cap-num">06</div>
+      <div class="cap-content">
+        <div class="cap-title">Global NOC Command Center — One Roof for Everything</div>
+        <p class="cap-body">GMIX brings every capability — traffic maps, heatmaps, operator health, AI simulation, fraud feeds, campaign forecasts, revenue impact calculators, and the HMW strategic scorecards — into a single real-time dashboard. For the first time, a Telecom NOC operator and a Chief Revenue Officer can look at the same screen and see the same truth.</p>
+        <span class="cap-tag tag-cyan">24 routes · 6 regions · 15 operators</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Before / After -->
+<div class="ba-section reveal">
+  <div class="ba-col ba-before">
+    <div class="ba-label">Before GMIX</div>
+    <h3 class="ba-title">The Old World</h3>
+    <div class="ba-hrs">8–10</div>
+    <div class="ba-hrsub">hours per week, per team, just to understand what already happened</div>
+    <ul class="ba-list">
+      <li><span class="ico">✕</span> Manual campaign report review across 5 platforms</li>
+      <li><span class="ico">✕</span> No visibility into channel transition drop-off</li>
+      <li><span class="ico">✕</span> Operator failures detected minutes or hours after impact</li>
+      <li><span class="ico">✕</span> 100,000 interactions lost per month — silently</li>
+      <li><span class="ico">✕</span> Fraud detected after delivery, not before</li>
+      <li><span class="ico">✕</span> 5 dashboards, zero unified journey view</li>
+      <li><span class="ico">✕</span> Revenue lost: $480,000/year, unnoticed</li>
+    </ul>
+  </div>
+  <div class="ba-divider"></div>
+  <div class="ba-col ba-after">
+    <div class="ba-label">With GMIX</div>
+    <h3 class="ba-title">The New World</h3>
+    <div class="ba-hrs">4–5</div>
+    <div class="ba-hrsub">hours per week, freed for strategy — because GMIX watches while you think</div>
+    <ul class="ba-list">
+      <li><span class="ico" style="color:var(--green)">✓</span> AI insight summaries delivered automatically, in real time</li>
+      <li><span class="ico" style="color:var(--green)">✓</span> Full cross-channel journey map with intent tracking</li>
+      <li><span class="ico" style="color:var(--green)">✓</span> Operator failover in &lt;200ms, zero message loss</li>
+      <li><span class="ico" style="color:var(--green)">✓</span> 20,000 interactions recovered per month</li>
+      <li><span class="ico" style="color:var(--green)">✓</span> Fraud blocked before delivery, 0 fraudulent messages</li>
+      <li><span class="ico" style="color:var(--green)">✓</span> One unified NOC dashboard across all channels</li>
+      <li><span class="ico" style="color:var(--green)">✓</span> $480,000/year revenue opportunity unlocked</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     THE THREE HMW PILLARS
+═══════════════════════════════════════════ -->
+<div id="pillars"></div>
+<div class="hmw-section">
+  <h2 class="reveal">The Three Questions GMIX Was Built to Answer</h2>
+  <p class="h-sub reveal">These are not feature categories. They are the three "How Might We" questions that define the entire purpose of the platform.</p>
+  <div class="hmw-grid">
+
+    <div class="hmw-card hc1 reveal reveal-delay-1">
+      <div class="hmw-label">Pillar I — Simplification</div>
+      <span class="hmw-icon">⚙️</span>
+      <h3 class="hmw-title">Turn Data Into Differentiation</h3>
+      <p class="hmw-q">"How Might We turn internal data strengths into differentiating customer solutions that can scale globally?"</p>
+      <p style="font-size:13px;color:var(--mist);line-height:1.7;margin-bottom:16px;font-weight:300">
+        GMIX's answer: make the intelligence that lived inside your network — operator telemetry, routing signals, traffic patterns — into a product that customers can feel. Automatic routing. Proactive alerts. AI-suggested optimizations. The data already existed. GMIX made it readable, actionable, and scalable across every region.
+      </p>
+      <div class="hmw-stats">
+        <div class="hm-stat"><div class="hm-val">24</div><div class="hm-lbl">Auto-Routes</div></div>
+        <div class="hm-stat"><div class="hm-val">12%</div><div class="hm-lbl">Cost Saved</div></div>
+        <div class="hm-stat"><div class="hm-val">94%</div><div class="hm-lbl">AI Confidence</div></div>
+      </div>
+      <div class="hmw-score">
+        <div class="hs-row"><span>Platform coverage</span><span>78 / 100</span></div>
+        <div class="hs-track"><div class="hs-fill" style="width:78%"></div></div>
+      </div>
+    </div>
+
+    <div class="hmw-card hc2 reveal reveal-delay-2">
+      <div class="hmw-label">Pillar II — Customer Experience</div>
+      <span class="hmw-icon">🤝</span>
+      <h3 class="hmw-title">Eliminate the Gap Between Channels</h3>
+      <p class="hmw-q">"How Might We create simpler, more intuitive experiences that help customers achieve their goals with less friction and more confidence?"</p>
+      <p style="font-size:13px;color:var(--mist);line-height:1.7;margin-bottom:16px;font-weight:300">
+        GMIX's answer: map the journey, find the friction, and close the gap before the customer notices it exists. Pre-transition notifications. Session state carriers. Single-sign tokens at re-authentication points. Callback scheduling. The customer experiences a seamless journey. The enterprise sees a 20,000-interaction improvement per month.
+      </p>
+      <div class="hmw-stats">
+        <div class="hm-stat"><div class="hm-val">20K</div><div class="hm-lbl">Recovered/mo</div></div>
+        <div class="hm-stat"><div class="hm-val">97.2%</div><div class="hm-lbl">Success Rate</div></div>
+        <div class="hm-stat"><div class="hm-val">−18%</div><div class="hm-lbl">Drop-off</div></div>
+      </div>
+      <div class="hmw-score">
+        <div class="hs-row"><span>CX coverage</span><span>62 / 100</span></div>
+        <div class="hs-track"><div class="hs-fill" style="width:62%"></div></div>
+      </div>
+    </div>
+
+    <div class="hmw-card hc3 reveal reveal-delay-3">
+      <div class="hmw-label">Pillar III — Employee Experience</div>
+      <span class="hmw-icon">🌟</span>
+      <h3 class="hmw-title">Give Teams Back Their Time</h3>
+      <p class="hmw-q">"How Might We improve the day-to-day experience of employees by increasing engagement, purpose, and sense of impact?"</p>
+      <p style="font-size:13px;color:var(--mist);line-height:1.7;margin-bottom:16px;font-weight:300">
+        GMIX's answer: replace the 8 hours of manual analysis with AI-generated insight summaries that arrive before the morning standup. Let Employee A focus on 124 campaigns per month instead of spreadsheets. Let Employee C save 5.2 hours per week — and use them on strategy, not data collation. Satisfaction up 12%. Purpose score: 94%. That's not a number. That's a culture shift.
+      </p>
+      <div class="hmw-stats">
+        <div class="hm-stat"><div class="hm-val">200+</div><div class="hm-lbl">Hrs/yr Saved</div></div>
+        <div class="hm-stat"><div class="hm-val">50%</div><div class="hm-lbl">Less Manual</div></div>
+        <div class="hm-stat"><div class="hm-val">87%</div><div class="hm-lbl">Satisfaction</div></div>
+      </div>
+      <div class="hmw-score">
+        <div class="hs-row"><span>EX coverage</span><span>55 / 100</span></div>
+        <div class="hs-track"><div class="hs-fill" style="width:55%"></div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     THE IMPACT NUMBERS
+═══════════════════════════════════════════ -->
+<div id="impact"></div>
+<div class="impact-section reveal">
+  <h2>The Numbers That Tell the New Story</h2>
+  <p class="i-sub">When intelligence replaces assumption, the results speak for themselves.</p>
+  <div class="impact-grid">
+    <div class="impact-card ic-gold reveal reveal-delay-1">
+      <div class="ic-icon">💰</div>
+      <div>
+        <div class="ic-num">$480,000</div>
+        <div class="ic-label">Annual Revenue Impact</div>
+        <div class="ic-desc">20,000 recovered interactions per month × 5% conversion × $40 average conversion value × 12 months. That's the value of seeing the journey clearly.</div>
+      </div>
+    </div>
+    <div class="impact-card ic-cyan reveal reveal-delay-2">
+      <div class="ic-icon">🔁</div>
+      <div>
+        <div class="ic-num">20,000</div>
+        <div class="ic-label">Journeys Recovered / Month</div>
+        <div class="ic-desc">From 100,000 interactions lost at baseline to 80,000 — a 20% improvement in retention powered entirely by AI-detected friction points and automated pre-transition interventions.</div>
+      </div>
+    </div>
+    <div class="impact-card ic-green reveal reveal-delay-1">
+      <div class="ic-icon">⚡</div>
+      <div>
+        <div class="ic-num">&lt;200ms</div>
+        <div class="ic-label">Network Failover Time</div>
+        <div class="ic-desc">When Operator X fails, GMIX doesn't call a meeting. It reroutes. In under 200 milliseconds. With zero message loss. While the team is still reading the alert.</div>
+      </div>
+    </div>
+    <div class="impact-card ic-purple reveal reveal-delay-2">
+      <div class="ic-icon">⏱</div>
+      <div>
+        <div class="ic-num">200+ hrs</div>
+        <div class="ic-label">Freed Per Team / Year</div>
+        <div class="ic-desc">Eight to ten hours of manual analysis per week, reduced to four to five. Multiplied across three analytics teams — that's 780 hours per year returned to strategic work. Equivalent to 19.5 additional working weeks.</div>
+      </div>
+    </div>
+    <div class="impact-card ic-gold reveal reveal-delay-1">
+      <div class="ic-icon">📡</div>
+      <div>
+        <div class="ic-num">96.8%</div>
+        <div class="ic-label">Delivery Success Rate</div>
+        <div class="ic-desc">Sustained across 5,240,000 messages per day, through 24 active routes across 6 regions, monitored in real time by GMIX AI with continuous operator health scoring and predictive rerouting.</div>
+      </div>
+    </div>
+    <div class="impact-card ic-cyan reveal reveal-delay-2">
+      <div class="ic-icon">🛡</div>
+      <div>
+        <div class="ic-num">0</div>
+        <div class="ic-label">Fraudulent Messages Delivered</div>
+        <div class="ic-desc">GMIX's AI signature library — trained on 500M+ fraud patterns — blocked every identified grey route attempt. 99.1% detection accuracy. 0.9% false positives. Industry leading performance, running continuously, never sleeping.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Closing prose -->
+<section class="section reveal">
+  <p class="prose-lead">This is not a story about technology. <em>It is a story about what becomes possible when you can finally see the whole journey.</em></p>
+  <p class="prose">Every operator. Every route. Every transition. Every drop-off point. Every recovered customer. Every hour given back to the people who should be building strategy instead of building spreadsheets.</p>
+  <p class="prose">The old world of telecom wasn't broken because it was slow. It was broken because it was <strong>blind</strong>. GMIX gave it eyes. And once you have seen the journey end to end — once you have watched 20,000 customers come back who would have been lost — you cannot go back to the dashboard that told you last week's story.</p>
+  <div class="pull-quote green">
+    <p class="pq-text">"Composite HMW Score: 65 / 100. Target by Q4: 82 / 100. The gap isn't a problem. It's the roadmap."</p>
+    <p class="pq-attr">GMIX Strategic Scorecard — Three Pillars, One Direction</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     CLOSING CTA
+═══════════════════════════════════════════ -->
+<section class="cta-section">
+  <div class="cta-glow"></div>
+  <div class="cta-eyebrow">The story continues</div>
+  <h2 class="cta-title">The Journey Is Not<br>the Problem.<br><em>The Gap Is.</em></h2>
+  <p class="cta-body">GMIX closes the gap. Across every channel. Between every transition. Before every customer decides to stop.</p>
+  <div class="cta-stats">
+    <div class="cta-stat">
+      <span class="cta-stat-num">$480K</span>
+      <div class="cta-stat-lbl">Annual Revenue</div>
+    </div>
+    <div class="cta-stat">
+      <span class="cta-stat-num">20,000</span>
+      <div class="cta-stat-lbl">Recovered / month</div>
+    </div>
+    <div class="cta-stat">
+      <span class="cta-stat-num">200+</span>
+      <div class="cta-stat-lbl">Hours freed / year</div>
+    </div>
+  </div>
+  <div class="cta-actions">
+    <a href="#" class="cta-btn btn-primary">Request a Demo</a>
+    <a href="#problem" class="cta-btn btn-outline">Read the Story Again</a>
+  </div>
+</section>
+
+<!-- ═══════════════════════ FOOTER ═══════════════════════ -->
+<footer>
+  <div class="footer-logo">⬡ GMIX Intelligence Platform</div>
+  <div class="footer-note">AI-Driven Visibility into Cross-Channel Customer Intent  ·  Confidential  ·  2025</div>
+  <div class="footer-pillars">
+    <span>⚙️ Simplification</span>
+    <span>🤝 Customer Experience</span>
+    <span>🌟 Employee Experience</span>
+  </div>
+</footer>
+
+<script>
+/* ── SCROLL PROGRESS ── */
+const prog = document.getElementById('progress');
+window.addEventListener('scroll', () => {
+  const pct = (window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100;
+  prog.style.width = pct + '%';
+});
+
+/* ── SCROLL REVEAL ── */
+const revealEls = document.querySelectorAll('.reveal');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible');
+      observer.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+revealEls.forEach(el => observer.observe(el));
+
+/* ── ANIMATED STAT COUNTERS ── */
+function animateCounter(el, target, suffix, prefix, duration) {
+  let start = 0;
+  const isFloat = String(target).includes('.');
+  const step = target / (duration / 16);
+  const timer = setInterval(() => {
+    start = Math.min(start + step, target);
+    el.textContent = (prefix||'') + (isFloat ? start.toFixed(1) : Math.floor(start).toLocaleString()) + (suffix||'');
+    if(start >= target) clearInterval(timer);
+  }, 16);
+}
+
+const statNums = document.querySelectorAll('.stat-num');
+const statObserver = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if(e.isIntersecting) {
+      const el = e.target;
+      const text = el.textContent.trim();
+      // parse numeric values for animation
+      const match = text.match(/[\d,]+\.?\d*/);
+      if(match) {
+        const raw = parseFloat(match[0].replace(/,/g,''));
+        const prefix = text.includes('$') ? '$' : '';
+        const suffix = text.includes('%') ? '%' : text.includes('hrs') ? ' hrs' : text.includes('M') ? 'M' : '';
+        animateCounter(el, raw, suffix, prefix, 1200);
+      }
+      statObserver.unobserve(el);
+    }
+  });
+}, { threshold: 0.5 });
+statNums.forEach(el => statObserver.observe(el));
+
+/* ── SCORE BAR ANIMATION ── */
+const scoreBars = document.querySelectorAll('.hs-fill');
+const barObserver = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if(e.isIntersecting) {
+      const target = e.target.style.width;
+      e.target.style.width = '0%';
+      setTimeout(() => { e.target.style.width = target; }, 100);
+      barObserver.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.5 });
+scoreBars.forEach(el => barObserver.observe(el));
+
+/* ── CURSOR GLOW (subtle) ── */
+document.addEventListener('mousemove', (e) => {
+  const glow = document.querySelector('.hero-glow');
+  if(glow && e.clientY < window.innerHeight) {
+    glow.style.left = e.clientX + 'px';
+    glow.style.top = e.clientY + 'px';
+    glow.style.transform = 'translate(-50%,-50%)';
+  }
+});
+</script>
+</body>
+</html>

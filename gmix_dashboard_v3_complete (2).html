@@ -1,0 +1,1799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>GMIX – Global Messaging Intelligence Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+/* ══════════════════════════════════════════
+   RESET & TOKENS
+══════════════════════════════════════════ */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg0:#050d1a; --bg1:#081526; --bg2:#0c1e36; --bg3:#0f2540;
+  --surface:#122845; --surfaceHover:#183356;
+  --border:#1a3455; --borderBright:#1e4268;
+  --accent:#00c8ff; --accentDim:#0891b2;
+  --gold:#f5a623; --goldDim:#c47d0c;
+  --green:#22c55e; --greenDim:#15803d;
+  --red:#ef4444; --redDim:#991b1b;
+  --amber:#f59e0b; --purple:#8b5cf6;
+  --text1:#e8f4ff; --text2:#94a3b8; --text3:#475569;
+  --fontH:'Rajdhani',sans-serif;
+  --fontB:'DM Sans',sans-serif;
+  --fontM:'JetBrains Mono',monospace;
+}
+body{font-family:var(--fontB);background:var(--bg0);color:var(--text1);
+  display:flex;flex-direction:column;height:100vh;overflow:hidden;font-size:14px}
+
+/* ══════════════════════════════════════════
+   SCROLLBAR
+══════════════════════════════════════════ */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--bg1)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+::-webkit-scrollbar-thumb:hover{background:var(--accent)}
+
+/* ══════════════════════════════════════════
+   TOPBAR
+══════════════════════════════════════════ */
+.topbar{
+  height:52px;background:var(--bg0);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;
+  justify-content:space-between;
+  padding:0 18px;flex-shrink:0;z-index:100;
+  position:relative;
+}
+.topbar::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--accent),transparent);
+  opacity:0.4;
+}
+.topbar-logo{
+  font-family:var(--fontH);font-size:20px;font-weight:700;
+  color:var(--accent);letter-spacing:2px;
+  display:flex;align-items:center;gap:8px;
+}
+.topbar-logo span{color:var(--text2);font-size:12px;font-weight:400;letter-spacing:1px;margin-top:2px}
+.topbar-btns{display:flex;gap:6px}
+.topbar-right{display:flex;align-items:center;gap:10px}
+
+.tbtn{
+  padding:6px 12px;border:1px solid var(--border);border-radius:5px;
+  background:var(--surface);color:var(--text1);cursor:pointer;
+  font-family:var(--fontH);font-size:13px;font-weight:600;letter-spacing:.5px;
+  transition:all .2s;display:flex;align-items:center;gap:5px;
+}
+.tbtn:hover{transform:translateY(-1px);border-color:var(--accent);color:var(--accent)}
+.tbtn-sim{border-color:#7c3aed;color:#a78bfa}
+.tbtn-sim:hover{background:#3b1f6e;border-color:#a78bfa}
+.tbtn-demo{border-color:var(--accentDim);color:var(--accent)}
+.tbtn-demo:hover{background:#0c2a40}
+.tbtn-incident{border-color:var(--redDim);color:var(--red)}
+.tbtn-incident:hover{background:#2d0a0a}
+.tbtn-noc{border-color:var(--border)}
+
+.status-pill{
+  padding:4px 12px;border-radius:20px;font-size:11px;
+  font-family:var(--fontH);font-weight:700;letter-spacing:1px;
+  background:rgba(34,197,94,.12);color:var(--green);
+  border:1px solid rgba(34,197,94,.3);
+  animation:pulseGreen 2.5s infinite;
+}
+.status-pill.danger{background:rgba(239,68,68,.12);color:var(--red);
+  border-color:rgba(239,68,68,.3);animation:pulseRed 1.5s infinite}
+.status-pill.warn{background:rgba(245,158,11,.12);color:var(--amber);
+  border-color:rgba(245,158,11,.3);animation:pulseAmber 2s infinite}
+@keyframes pulseGreen{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.3)}50%{box-shadow:0 0 0 5px rgba(34,197,94,0)}}
+@keyframes pulseRed{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.4)}50%{box-shadow:0 0 0 5px rgba(239,68,68,0)}}
+@keyframes pulseAmber{0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,.3)}50%{box-shadow:0 0 0 5px rgba(245,158,11,0)}}
+
+/* ══════════════════════════════════════════
+   LAYOUT
+══════════════════════════════════════════ */
+.layout{display:flex;flex:1;overflow:hidden}
+
+/* ══════════════════════════════════════════
+   SIDEBAR
+══════════════════════════════════════════ */
+.sidebar{
+  width:230px;flex-shrink:0;background:var(--bg1);
+  border-right:1px solid var(--border);
+  overflow-y:auto;padding:8px 0;
+}
+.sb-group{
+  font-family:var(--fontH);font-size:10px;font-weight:700;
+  color:var(--text3);text-transform:uppercase;letter-spacing:1.5px;
+  padding:12px 16px 4px;
+}
+.sb-btn{
+  width:100%;padding:9px 16px;border:none;background:none;
+  color:var(--text2);text-align:left;cursor:pointer;
+  font-family:var(--fontB);font-size:13px;
+  display:flex;align-items:center;gap:9px;
+  transition:all .15s;border-left:3px solid transparent;
+}
+.sb-btn:hover{background:var(--bg2);color:var(--text1)}
+.sb-btn.active{background:var(--bg2);color:var(--accent);border-left-color:var(--accent);font-weight:500}
+.sb-btn .ic{width:18px;text-align:center;font-size:14px;flex-shrink:0}
+.sb-new{
+  font-size:9px;background:rgba(245,166,35,.2);color:var(--gold);
+  border:1px solid rgba(245,166,35,.3);border-radius:3px;
+  padding:1px 5px;margin-left:auto;font-family:var(--fontH);font-weight:700;letter-spacing:.5px;
+}
+
+/* ══════════════════════════════════════════
+   CONTENT
+══════════════════════════════════════════ */
+.content{flex:1;overflow-y:auto;padding:18px;background:var(--bg0)}
+.tab{display:none;animation:fadeUp .3s ease}
+.tab.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ══════════════════════════════════════════
+   CARDS / SECTIONS
+══════════════════════════════════════════ */
+.card{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:8px;padding:18px;margin-bottom:16px;
+  transition:border-color .2s;
+}
+.card:hover{border-color:var(--borderBright)}
+.card-title{
+  font-family:var(--fontH);font-size:13px;font-weight:700;
+  color:var(--text2);text-transform:uppercase;letter-spacing:1px;
+  margin-bottom:14px;padding-bottom:8px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:8px;
+}
+.card-title .ct-badge{
+  font-size:10px;padding:2px 7px;border-radius:3px;margin-left:auto;
+  font-weight:700;letter-spacing:.5px;
+}
+.badge-live{background:rgba(34,197,94,.15);color:var(--green);border:1px solid rgba(34,197,94,.25)}
+.badge-ai  {background:rgba(139,92,246,.15);color:#a78bfa;border:1px solid rgba(139,92,246,.25)}
+.badge-new {background:rgba(245,166,35,.15);color:var(--gold);border:1px solid rgba(245,166,35,.25)}
+.badge-hmw {background:rgba(0,200,255,.15);color:var(--accent);border:1px solid rgba(0,200,255,.25)}
+
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.three-col{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.four-col{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+
+/* ══════════════════════════════════════════
+   KPI TILES
+══════════════════════════════════════════ */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.kpi{
+  background:var(--bg2);border:1px solid var(--border);border-radius:8px;
+  padding:14px 16px;transition:all .2s;position:relative;overflow:hidden;
+}
+.kpi::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--accent),transparent);opacity:0.5;
+}
+.kpi:hover{border-color:var(--accent);transform:translateY(-1px)}
+.kpi-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;font-family:var(--fontH);font-weight:600}
+.kpi-val{font-family:var(--fontH);font-size:26px;font-weight:700;color:var(--text1)}
+.kpi-val.blue{color:var(--accent)}
+.kpi-val.green{color:var(--green)}
+.kpi-val.gold{color:var(--gold)}
+.kpi-val.purple{color:var(--purple)}
+.kpi-sub{font-size:11px;color:var(--text3);margin-top:4px}
+.kpi-up{color:var(--green)}
+.kpi-dn{color:var(--red)}
+
+/* ══════════════════════════════════════════
+   ALERTS
+══════════════════════════════════════════ */
+.alert{
+  padding:10px 14px;margin-bottom:8px;border-radius:6px;
+  font-size:13px;display:flex;align-items:flex-start;gap:8px;
+  animation:slideIn .35s ease;
+}
+@keyframes slideIn{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:none}}
+.a-red   {background:rgba(239,68,68,.08); border:1px solid rgba(239,68,68,.25);color:#fca5a5}
+.a-amber {background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);color:#fcd34d}
+.a-green {background:rgba(34,197,94,.08); border:1px solid rgba(34,197,94,.25);color:#86efac}
+.a-blue  {background:rgba(0,200,255,.08); border:1px solid rgba(0,200,255,.25);color:#7dd3fc}
+.a-purple{background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.25);color:#c4b5fd}
+
+/* ══════════════════════════════════════════
+   OPERATOR BARS
+══════════════════════════════════════════ */
+.op-row{margin-bottom:10px}
+.op-lbl{font-size:12px;color:var(--text2);margin-bottom:4px;display:flex;justify-content:space-between}
+.bar-track{height:14px;background:var(--bg3);border-radius:7px;overflow:hidden}
+.bar-fill{height:100%;border-radius:7px;background:var(--green);
+  transition:width 1.2s cubic-bezier(.4,0,.2,1)}
+
+/* ══════════════════════════════════════════
+   BUTTONS
+══════════════════════════════════════════ */
+.btn{
+  padding:8px 15px;border:1px solid;border-radius:6px;cursor:pointer;
+  font-family:var(--fontH);font-size:13px;font-weight:700;letter-spacing:.5px;
+  transition:all .15s;display:inline-flex;align-items:center;gap:5px;
+}
+.btn:hover{transform:translateY(-1px);filter:brightness(1.2)}
+.btn-p {background:rgba(37,99,235,.15);border-color:#2563eb;color:#93c5fd}
+.btn-g {background:rgba(21,128,61,.15);border-color:#15803d;color:var(--green)}
+.btn-r {background:rgba(185,28,28,.15);border-color:#b91c1c;color:var(--red)}
+.btn-a {background:rgba(124,58,237,.15);border-color:#7c3aed;color:#a78bfa}
+.btn-c {background:rgba(8,145,178,.15);border-color:#0891b2;color:var(--accent)}
+.btn-gold{background:rgba(245,166,35,.15);border-color:var(--goldDim);color:var(--gold)}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+
+/* ══════════════════════════════════════════
+   CONSOLE / LOG
+══════════════════════════════════════════ */
+.console{
+  background:var(--bg0);border:1px solid var(--border);
+  font-family:var(--fontM);font-size:12px;color:var(--green);
+  padding:12px;border-radius:6px;max-height:220px;overflow-y:auto;line-height:1.8;
+}
+.cl-err{color:#f87171}.cl-warn{color:#fcd34d}.cl-info{color:#7dd3fc}.cl-good{color:#86efac}
+
+/* AI Box */
+.ai-box{
+  background:var(--bg0);border:1px solid rgba(0,200,255,.2);
+  border-radius:8px;padding:14px;font-size:13px;color:#7dd3fc;line-height:1.8;margin-top:10px;
+}
+.ai-box strong{color:var(--accent)}
+
+/* Result panel */
+.result-panel{
+  background:var(--bg0);border:1px solid var(--border);
+  border-radius:8px;padding:14px;margin-top:10px;
+  font-size:13px;color:var(--text2);line-height:1.8;display:none;
+}
+
+/* ══════════════════════════════════════════
+   TABLES
+══════════════════════════════════════════ */
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{background:var(--bg3);padding:9px 12px;border:1px solid var(--border);
+  text-align:left;color:var(--text3);font-family:var(--fontH);font-size:11px;
+  text-transform:uppercase;letter-spacing:.8px}
+.tbl td{padding:9px 12px;border:1px solid var(--border);color:var(--text2)}
+.tbl tr:hover td{background:var(--bg3)}
+.pill{padding:2px 8px;border-radius:10px;font-size:11px;font-family:var(--fontH);font-weight:700}
+.pill-g{background:rgba(34,197,94,.12);color:var(--green);border:1px solid rgba(34,197,94,.2)}
+.pill-b{background:rgba(0,200,255,.1);color:var(--accent);border:1px solid rgba(0,200,255,.2)}
+.pill-a{background:rgba(245,158,11,.1);color:var(--amber);border:1px solid rgba(245,158,11,.2)}
+.pill-r{background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.2)}
+
+/* ══════════════════════════════════════════
+   CHART WRAP
+══════════════════════════════════════════ */
+.chart-wrap{position:relative;height:240px}
+
+/* ══════════════════════════════════════════
+   HEATMAP
+══════════════════════════════════════════ */
+.heat-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:4px;margin-top:8px}
+.heat-cell{height:32px;border-radius:4px;transition:background .9s ease}
+
+/* ══════════════════════════════════════════
+   SVG NETWORK
+══════════════════════════════════════════ */
+.tsvg{background:var(--bg0);border-radius:8px;width:100%;border:1px solid var(--border)}
+.nd{fill:var(--green);filter:drop-shadow(0 0 5px rgba(34,197,94,.5))}
+.rt{stroke:rgba(0,200,255,.4);stroke-width:1.5}
+.pk{fill:var(--gold);filter:drop-shadow(0 0 4px rgba(245,166,35,.5))}
+.nl{fill:var(--text2);font-size:11px;font-family:var(--fontB)}
+.aline{stroke:var(--accent);stroke-width:2;stroke-dasharray:8 6;animation:flowAnim 1.5s linear infinite}
+@keyframes flowAnim{from{stroke-dashoffset:0}to{stroke-dashoffset:-28}}
+
+/* ══════════════════════════════════════════
+   NOC WALL
+══════════════════════════════════════════ */
+.noc-wall{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.noc-tile{
+  background:var(--bg2);border:1px solid var(--border);border-radius:8px;
+  height:120px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:6px;
+  font-family:var(--fontH);font-size:13px;color:var(--accent);
+  font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.5px;
+}
+.noc-tile:hover{border-color:var(--accent);background:var(--bg3);transform:translateY(-2px)}
+.noc-tile .ti{font-size:26px}
+.noc-tile.alert-tile{border-color:rgba(239,68,68,.4);color:var(--red);animation:pulseRed 2s infinite}
+
+/* ══════════════════════════════════════════
+   ★ NEW: JOURNEY MAP
+══════════════════════════════════════════ */
+.journey-wrap{overflow-x:auto;padding:10px 0}
+.journey-nodes{display:flex;align-items:flex-start;gap:0;min-width:800px}
+.jnode{
+  flex:1;display:flex;flex-direction:column;align-items:center;position:relative;
+}
+.jnode-box{
+  background:var(--bg3);border:1px solid var(--border);border-radius:8px;
+  padding:12px;text-align:center;width:110px;transition:all .2s;cursor:pointer;
+}
+.jnode-box:hover{border-color:var(--accent);background:var(--surfaceHover)}
+.jnode-box .jch{font-family:var(--fontH);font-size:13px;font-weight:700;color:var(--text1);margin-bottom:4px}
+.jnode-box .jvol{font-size:11px;color:var(--text3)}
+.jnode-box .jrate{font-family:var(--fontH);font-size:16px;font-weight:700;margin-top:4px}
+.jnode-arrow{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding-top:20px;
+}
+.jnode-arrow .arr-line{
+  width:100%;height:2px;background:linear-gradient(90deg,var(--border),var(--accent));position:relative;
+}
+.jnode-arrow .arr-line::after{
+  content:'▶';position:absolute;right:-8px;top:-8px;color:var(--accent);font-size:14px;
+}
+.dropoff-tag{
+  font-size:10px;font-family:var(--fontH);font-weight:700;color:var(--red);
+  background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);
+  border-radius:4px;padding:2px 6px;margin-top:6px;letter-spacing:.5px;
+}
+.friction-tag{
+  font-size:10px;font-family:var(--fontH);font-weight:700;color:var(--amber);
+  background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);
+  border-radius:4px;padding:2px 6px;margin-top:4px;letter-spacing:.5px;
+}
+
+/* ══════════════════════════════════════════
+   ★ NEW: REVENUE IMPACT
+══════════════════════════════════════════ */
+.rev-big{
+  text-align:center;padding:20px;
+  background:var(--bg0);border:1px solid var(--borderBright);border-radius:8px;
+}
+.rev-big .amt{font-family:var(--fontH);font-size:38px;font-weight:700;color:var(--gold)}
+.rev-big .lbl{font-size:12px;color:var(--text3);margin-top:4px;text-transform:uppercase;letter-spacing:.8px}
+.calc-row{display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;background:var(--bg3);border-radius:6px;margin-bottom:8px;font-size:13px}
+.calc-row .cr-lbl{color:var(--text2)}
+.calc-row .cr-val{font-family:var(--fontH);font-size:15px;font-weight:700;color:var(--text1)}
+.calc-row .cr-val.gold{color:var(--gold)}
+.calc-divider{height:1px;background:var(--border);margin:12px 0;position:relative}
+.calc-divider::after{content:'×';position:absolute;top:-9px;left:50%;transform:translateX(-50%);
+  background:var(--bg2);padding:0 8px;color:var(--text3);font-size:13px}
+
+/* ══════════════════════════════════════════
+   ★ NEW: TIME SAVED
+══════════════════════════════════════════ */
+.time-saved-visual{
+  display:flex;gap:16px;margin-top:12px;align-items:stretch;
+}
+.ts-col{flex:1;border-radius:8px;padding:14px;text-align:center}
+.ts-before{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2)}
+.ts-after {background:rgba(34,197,94,.08); border:1px solid rgba(34,197,94,.2)}
+.ts-hr{font-family:var(--fontH);font-size:40px;font-weight:700}
+.ts-before .ts-hr{color:var(--red)}
+.ts-after  .ts-hr{color:var(--green)}
+.ts-lbl{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);margin-top:4px}
+.ts-sub{font-size:12px;color:var(--text2);margin-top:8px}
+.ts-divider{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--text3);font-size:20px}
+
+/* ══════════════════════════════════════════
+   ★ NEW: HMW PILLARS
+══════════════════════════════════════════ */
+.hmw-card{
+  background:var(--bg0);border-radius:10px;padding:18px;
+  border:1px solid var(--borderBright);transition:all .25s;
+}
+.hmw-card:hover{transform:translateY(-3px);border-color:var(--accent)}
+.hmw-icon{font-size:28px;margin-bottom:10px}
+.hmw-label{
+  font-family:var(--fontH);font-size:11px;font-weight:700;
+  text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px;
+}
+.hmw-q{
+  font-family:var(--fontH);font-size:15px;font-weight:600;
+  color:var(--text1);line-height:1.5;margin-bottom:12px;
+}
+.hmw-metric-row{display:flex;gap:8px;flex-wrap:wrap}
+.hmw-metric{
+  background:var(--bg2);border:1px solid var(--border);border-radius:6px;
+  padding:8px 12px;text-align:center;flex:1;min-width:80px;
+}
+.hmw-metric .hm-val{font-family:var(--fontH);font-size:18px;font-weight:700}
+.hmw-metric .hm-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px}
+.hmw-score-bar{margin-top:12px}
+.hmw-score-track{height:6px;background:var(--bg3);border-radius:3px;margin-top:4px;overflow:hidden}
+.hmw-score-fill{height:100%;border-radius:3px;transition:width 1.5s ease}
+
+/* ══════════════════════════════════════════
+   ★ NEW: EMPLOYEE EXPERIENCE
+══════════════════════════════════════════ */
+.emp-metric{
+  background:var(--bg0);border:1px solid var(--border);border-radius:8px;
+  padding:16px;text-align:center;transition:all .2s;
+}
+.emp-metric:hover{border-color:var(--purple);transform:translateY(-2px)}
+.emp-metric .em-val{font-family:var(--fontH);font-size:28px;font-weight:700;color:var(--purple)}
+.emp-metric .em-lbl{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-top:4px}
+.emp-metric .em-trend{font-size:12px;margin-top:6px}
+.team-row{
+  display:flex;align-items:center;gap:12px;padding:10px 14px;
+  background:var(--bg3);border-radius:6px;margin-bottom:8px;
+}
+.team-avatar{
+  width:36px;height:36px;border-radius:50%;
+  background:linear-gradient(135deg,var(--purple),var(--accentDim));
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--fontH);font-size:13px;font-weight:700;flex-shrink:0;
+}
+.team-name{font-weight:500;font-size:13px;color:var(--text1)}
+.team-role{font-size:11px;color:var(--text3)}
+.team-right{margin-left:auto;text-align:right}
+.team-kpi{font-family:var(--fontH);font-size:15px;font-weight:700;color:var(--green)}
+.team-sub{font-size:11px;color:var(--text3)}
+
+/* ══════════════════════════════════════════
+   INSIGHT TILES
+══════════════════════════════════════════ */
+.insight-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:8px}
+.insight-tile{background:var(--bg0);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center}
+.insight-tile .iv{font-family:var(--fontH);font-size:22px;font-weight:700;color:var(--accent)}
+.insight-tile .il{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-top:4px}
+
+/* RANK */
+.rank-item{
+  display:flex;align-items:center;gap:10px;padding:8px 12px;
+  background:var(--bg0);border:1px solid var(--border);border-radius:6px;margin-bottom:6px;
+}
+.rank-num{width:22px;height:22px;border-radius:50%;background:var(--bg3);
+  display:flex;align-items:center;justify-content:center;font-size:11px;font-family:var(--fontH);font-weight:700;flex-shrink:0}
+.rank-bar-wrap{flex:1;height:8px;background:var(--bg3);border-radius:4px;overflow:hidden}
+.rank-bar-fill{height:100%;background:var(--green);border-radius:4px;transition:width 1.2s}
+
+/* FORECAST */
+.fc-row{margin-bottom:10px}
+.fc-lbl{font-size:12px;color:var(--text2);margin-bottom:4px;display:flex;justify-content:space-between}
+.fc-track{height:12px;background:var(--bg3);border-radius:6px;overflow:hidden}
+.fc-fill{height:100%;background:var(--purple);border-radius:6px;transition:width 1.2s}
+
+/* TOGGLE */
+.tog-wrap{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2)}
+.tog{width:40px;height:22px;background:var(--bg3);border-radius:11px;
+  cursor:pointer;position:relative;transition:background .2s;flex-shrink:0}
+.tog.on{background:var(--accentDim)}
+.tog::after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;
+  background:#fff;border-radius:50%;transition:transform .2s}
+.tog.on::after{transform:translateX(18px)}
+
+/* TOAST */
+#toast{
+  position:fixed;bottom:20px;right:20px;
+  background:var(--bg2);border:1px solid var(--accent);color:var(--accent);
+  padding:10px 18px;border-radius:7px;font-size:13px;font-family:var(--fontH);
+  font-weight:600;letter-spacing:.5px;z-index:9999;display:none;
+  animation:slideUp .3s ease;max-width:300px;
+}
+@keyframes slideUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ══════════════════════════════════════════
+   INTENT DROP-OFF FUNNEL
+══════════════════════════════════════════ */
+.funnel-wrap{display:flex;flex-direction:column;align-items:center;gap:0;padding:10px 0}
+.funnel-step{
+  border-radius:6px;padding:10px 14px;margin-bottom:4px;
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:13px;transition:all .2s;cursor:pointer;
+}
+.funnel-step:hover{filter:brightness(1.2)}
+.fs-label{font-family:var(--fontH);font-weight:700;letter-spacing:.5px}
+.fs-val{font-family:var(--fontH);font-size:16px;font-weight:700}
+.fs-drop{font-size:11px;color:var(--red);font-family:var(--fontH);font-weight:700}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════ TOPBAR ════════════════════════════ -->
+<div class="topbar">
+  <div class="topbar-logo">
+    ⬡ GMIX
+    <span>Global Messaging Intelligence Platform</span>
+  </div>
+  <div class="topbar-btns">
+    <button class="tbtn tbtn-sim"      onclick="runHeaderSim()">▶ AI Simulation</button>
+    <button class="tbtn tbtn-demo"     onclick="runLiveDemo()">📡 Live Demo</button>
+    <button class="tbtn tbtn-incident" onclick="runTrafficIncident()">⚠ Traffic Incident</button>
+    <button class="tbtn tbtn-noc"      onclick="toggleNOCMode()">🖥 NOC View</button>
+  </div>
+  <div class="topbar-right">
+    <div id="netStatus" class="status-pill">● NETWORK OPERATIONAL</div>
+  </div>
+</div>
+
+<!-- ════════════════════════════ LAYOUT ════════════════════════════ -->
+<div class="layout">
+
+<!-- ════════ SIDEBAR ════════ -->
+<div class="sidebar">
+  <div class="sb-group">Main</div>
+  <button class="sb-btn active" id="btn-overview"   onclick="showTab('overview')"  ><span class="ic">📊</span>Overview Dashboard</button>
+  <button class="sb-btn"        id="btn-globalhealth" onclick="showTab('globalhealth')"><span class="ic">🌐</span>Global Msg Health</button>
+  <button class="sb-btn"        id="btn-alerts"     onclick="showTab('alerts')"    ><span class="ic">🔔</span>AI Network Alerts</button>
+
+  <div class="sb-group">Strategic</div>
+  <button class="sb-btn"        id="btn-hmwpillars" onclick="showTab('hmwpillars')"><span class="ic">🎯</span>HMW Pillars <span class="sb-new">NEW</span></button>
+  <button class="sb-btn"        id="btn-journey"    onclick="showTab('journey')"   ><span class="ic">🔁</span>Cross-Channel Journey <span class="sb-new">NEW</span></button>
+  <button class="sb-btn"        id="btn-intentdrop" onclick="showTab('intentdrop')"><span class="ic">📉</span>Intent Drop-off <span class="sb-new">NEW</span></button>
+  <button class="sb-btn"        id="btn-revenueimpact" onclick="showTab('revenueimpact')"><span class="ic">💰</span>Revenue Impact <span class="sb-new">NEW</span></button>
+  <button class="sb-btn"        id="btn-timesaved"  onclick="showTab('timesaved')" ><span class="ic">⏱</span>Time Saved <span class="sb-new">NEW</span></button>
+  <button class="sb-btn"        id="btn-employeeexp" onclick="showTab('employeeexp')"><span class="ic">👥</span>Employee Experience <span class="sb-new">NEW</span></button>
+
+  <div class="sb-group">Network</div>
+  <button class="sb-btn"        id="btn-trafficmap" onclick="showTab('trafficmap')"><span class="ic">🗺</span>Global Traffic Map</button>
+  <button class="sb-btn"        id="btn-heatmap"    onclick="showTab('heatmap')"   ><span class="ic">🔥</span>Latency Heatmap</button>
+  <button class="sb-btn"        id="btn-globe"      onclick="showTab('globe')"     ><span class="ic">🌍</span>3D Globe View</button>
+
+  <div class="sb-group">AI Engine</div>
+  <button class="sb-btn"        id="btn-routing"    onclick="showTab('routing')"   ><span class="ic">🔀</span>AI Routing Engine</button>
+  <button class="sb-btn"        id="btn-simulation" onclick="showTab('simulation')"><span class="ic">⚡</span>AI Simulation</button>
+  <button class="sb-btn"        id="btn-prediction" onclick="showTab('prediction')"><span class="ic">📈</span>Traffic Prediction</button>
+
+  <div class="sb-group">Analytics</div>
+  <button class="sb-btn"        id="btn-operators"  onclick="showTab('operators')" ><span class="ic">📡</span>Operator Performance</button>
+  <button class="sb-btn"        id="btn-ranking"    onclick="showTab('ranking')"   ><span class="ic">🏆</span>Predictive Ranking</button>
+  <button class="sb-btn"        id="btn-forecast"   onclick="showTab('forecast')"  ><span class="ic">🎯</span>Campaign Forecast</button>
+  <button class="sb-btn"        id="btn-insights"   onclick="showTab('insights')"  ><span class="ic">💡</span>Customer Insights</button>
+
+  <div class="sb-group">Monitoring</div>
+  <button class="sb-btn"        id="btn-fraud"      onclick="showTab('fraud')"     ><span class="ic">🛡</span>Fraud Detection</button>
+  <button class="sb-btn"        id="btn-spam"       onclick="showTab('spam')"      ><span class="ic">🚫</span>Spam Detection</button>
+  <button class="sb-btn"        id="btn-logs"       onclick="showTab('logs')"      ><span class="ic">📋</span>System Event Logs</button>
+  <button class="sb-btn"        id="btn-nocwall"    onclick="showTab('nocwall')"   ><span class="ic">🖥</span>NOC Video Wall</button>
+</div>
+
+<!-- ════════ CONTENT ════════ -->
+<div class="content" id="mainContent">
+
+<!-- ════════════════════════════════════════════════
+     TAB: OVERVIEW
+════════════════════════════════════════════════ -->
+<div id="tab-overview" class="tab active">
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-label">Messages Sent Today</div><div class="kpi-val blue" id="kpi-messages">5,240,000</div><div class="kpi-sub"><span class="kpi-up">▲ 3.2%</span> vs yesterday</div></div>
+    <div class="kpi"><div class="kpi-label">Delivery Success Rate</div><div class="kpi-val green" id="kpi-success">96.8%</div><div class="kpi-sub"><span class="kpi-up">▲ 0.4%</span> vs last hour</div></div>
+    <div class="kpi"><div class="kpi-label">Average Latency</div><div class="kpi-val" id="kpi-latency">1.8s</div><div class="kpi-sub"><span class="kpi-dn">▼ 0.1s</span> improvement</div></div>
+    <div class="kpi"><div class="kpi-label">Active Routes</div><div class="kpi-val" id="kpi-routes">24</div><div class="kpi-sub">Across 6 regions</div></div>
+    <div class="kpi"><div class="kpi-label">Messages / sec</div><div class="kpi-val blue" id="kpi-mps">13,200</div><div class="kpi-sub">Real-time throughput</div></div>
+    <div class="kpi"><div class="kpi-label">OTP / sec</div><div class="kpi-val" id="kpi-otp">3,400</div><div class="kpi-sub">Auth traffic</div></div>
+    <div class="kpi"><div class="kpi-label">Global OTP Counter</div><div class="kpi-val blue" id="kpi-otpTotal">1,200,000</div><div class="kpi-sub">Since 00:00 UTC</div></div>
+    <div class="kpi"><div class="kpi-label">Active Operator</div><div class="kpi-val green" id="kpi-operator" style="font-size:20px">Jio</div><div class="kpi-sub">Primary routing node</div></div>
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">AI Network Alerts<span class="ct-badge badge-live">LIVE</span></div>
+      <div class="alert a-red">🔴 Delivery drop detected: Operator X – Success: 82%</div>
+      <div class="alert a-amber">⚠️ Traffic spike predicted in India OTP at 19:00</div>
+      <div class="alert a-green">✅ Route B optimization available – 12% cost savings</div>
+      <div class="alert a-blue">ℹ️ System health normal across all 24 active routes</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Routing Optimization Table<span class="ct-badge badge-ai">AI</span></div>
+      <table class="tbl">
+        <thead><tr><th>Route</th><th>Current Cost</th><th>Recommended</th><th>Savings</th></tr></thead>
+        <tbody>
+          <tr><td>Route A</td><td>$0.0032</td><td><span class="pill pill-b">Route B</span></td><td><span class="pill pill-g">12%</span></td></tr>
+          <tr><td>Route C</td><td>$0.0035</td><td><span class="pill pill-b">Route D</span></td><td><span class="pill pill-g">9%</span></td></tr>
+          <tr><td>Route E</td><td>$0.0041</td><td><span class="pill pill-b">Route F</span></td><td><span class="pill pill-g">7%</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Operator Performance – Live<span class="ct-badge badge-live">LIVE</span></div>
+      <div id="overviewBars"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Traffic Trend Forecast</div>
+      <div style="height:120px;display:flex;align-items:flex-end;gap:6px;margin-top:8px" id="trendBarsOv"></div>
+      <p style="font-size:11px;color:var(--text3);margin-top:8px">Traffic peaks during India OTP window 18:30–20:00 IST</p>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     TAB: GLOBAL HEALTH
+════════════════════════════════════════════════ -->
+<div id="tab-globalhealth" class="tab">
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-label">Messages Sent</div><div class="kpi-val blue" id="gh-msg">5,240,000</div></div>
+    <div class="kpi"><div class="kpi-label">Delivery Success</div><div class="kpi-val green" id="gh-dlr">96.8%</div></div>
+    <div class="kpi"><div class="kpi-label">Avg Latency</div><div class="kpi-val" id="gh-lat">1.8s</div></div>
+    <div class="kpi"><div class="kpi-label">Active Routes</div><div class="kpi-val">24</div></div>
+  </div>
+  <div class="two-col">
+    <div class="card"><div class="card-title">Operator Performance Chart</div><div class="chart-wrap"><canvas id="operatorChart"></canvas></div></div>
+    <div class="card"><div class="card-title">Traffic Trend Prediction</div><div class="chart-wrap"><canvas id="trafficChart"></canvas></div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Global Network Status Map</div>
+    <svg class="tsvg" viewBox="0 0 800 180" height="180">
+      <rect x="20"  y="80" width="60" height="24" rx="4" fill="#16a34a"/><text x="28"  y="120" class="nl">N. America</text>
+      <rect x="150" y="65" width="60" height="24" rx="4" fill="#16a34a"/><text x="158" y="105" class="nl">Europe</text>
+      <rect x="280" y="50" width="60" height="24" rx="4" fill="#eab308"/><text x="288" y="90"  class="nl">M. East</text>
+      <rect x="410" y="65" width="60" height="24" rx="4" fill="#dc2626"/><text x="418" y="105" class="nl">S. Asia</text>
+      <rect x="540" y="75" width="60" height="24" rx="4" fill="#16a34a"/><text x="548" y="115" class="nl">SE Asia</text>
+      <rect x="670" y="80" width="60" height="24" rx="4" fill="#16a34a"/><text x="678" y="120" class="nl">Oceania</text>
+    </svg>
+    <div style="display:flex;gap:18px;margin-top:8px;font-size:12px">
+      <span style="color:#16a34a">■ Healthy</span>
+      <span style="color:#eab308">■ Warning</span>
+      <span style="color:#dc2626">■ Congestion</span>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     TAB: AI ALERTS
+════════════════════════════════════════════════ -->
+<div id="tab-alerts" class="tab">
+  <div class="card">
+    <div class="card-title">Active AI Prediction Alerts<span class="ct-badge badge-live">LIVE</span></div>
+    <div class="alert a-red">🔴 Delivery drop detected on Operator X – Success rate: 82%</div>
+    <div class="alert a-amber">⚠️ Traffic spike predicted in India OTP at 19:00 (+42%)</div>
+    <div class="alert a-green">✅ Route B optimization available – 12% cost savings</div>
+    <div class="alert a-blue">ℹ️ GMIX AI Engine monitoring 24 routes – no failures</div>
+    <div class="alert a-amber">⚠️ Latency increase on Route A: 2.4s → 3.1s</div>
+    <div class="alert a-red">🔴 High OTP volume on Jio, Airtel between 18:00–20:00</div>
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Inject Custom Alert</div>
+      <div class="btn-row">
+        <button class="btn btn-r" onclick="injectAlert('red','🔴 Network degradation detected manually')">Danger Alert</button>
+        <button class="btn btn-c" onclick="injectAlert('amber','⚠️ Traffic spike simulated')">Warning</button>
+        <button class="btn btn-g" onclick="injectAlert('green','✅ System recovered manually')">OK Alert</button>
+      </div>
+      <div id="customAlertArea"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">AI Routing Decision<span class="ct-badge badge-ai">AI</span></div>
+      <div class="ai-box">
+        <strong>AI Routing Analysis</strong><br><br>
+        Increased latency on <strong>Route A</strong> (2.4s → 3.1s) over 15 min.<br><br>
+        <strong>Recommendation:</strong> Switch to <strong>Route B</strong> — 98% DLR, 12% lower cost, 1.4s latency.<br><br>
+        AI confidence: <strong>94.2%</strong> | Auto-apply in 60s unless overridden.
+      </div>
+      <div class="btn-row" style="margin-top:10px">
+        <button class="btn btn-g" onclick="applyRouting()">✅ Apply Now</button>
+        <button class="btn btn-r" onclick="dismissRouting()">✖ Dismiss</button>
+      </div>
+      <div id="routingFeedback" class="result-panel"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     ★ TAB: HMW PILLARS SCORECARD
+════════════════════════════════════════════════ -->
+<div id="tab-hmwpillars" class="tab">
+  <div class="card">
+    <div class="card-title">How Might We — Strategic Pillars Scorecard<span class="ct-badge badge-hmw">STRATEGIC</span></div>
+    <div class="alert a-blue" style="margin-bottom:16px">
+      ℹ️ These three pillars define GMIX's strategic value. Each is tracked with live metrics from the platform data.
+    </div>
+    <div class="three-col">
+
+      <!-- PILLAR 1 -->
+      <div class="hmw-card">
+        <div class="hmw-icon">⚙️</div>
+        <div class="hmw-label" style="color:var(--accent)">Pillar 1 — Simplification</div>
+        <div class="hmw-q">"How Might We turn internal data strengths into differentiating customer solutions that scale globally?"</div>
+        <div class="hmw-metric-row">
+          <div class="hmw-metric"><div class="hm-val" style="color:var(--accent)">24</div><div class="hm-lbl">Auto-routes</div></div>
+          <div class="hmw-metric"><div class="hm-val" style="color:var(--green)">12%</div><div class="hm-lbl">Cost saved</div></div>
+          <div class="hmw-metric"><div class="hm-val" style="color:var(--gold)">94%</div><div class="hm-lbl">AI confidence</div></div>
+        </div>
+        <div class="hmw-score-bar">
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3)"><span>Platform coverage</span><span>78%</span></div>
+          <div class="hmw-score-track"><div class="hmw-score-fill" style="width:78%;background:var(--accent)"></div></div>
+        </div>
+        <div style="margin-top:10px;font-size:12px;color:var(--text2)">
+          AI routing, auto-scaling, fraud blocking, and predictive operator switching directly turn GMIX's network data into a scalable differentiator for enterprise clients.
+        </div>
+      </div>
+
+      <!-- PILLAR 2 -->
+      <div class="hmw-card">
+        <div class="hmw-icon">🤝</div>
+        <div class="hmw-label" style="color:var(--gold)">Pillar 2 — Customer Experience</div>
+        <div class="hmw-q">"How Might We create simpler, more intuitive experiences that help customers achieve their goals with less friction?"</div>
+        <div class="hmw-metric-row">
+          <div class="hmw-metric"><div class="hm-val" style="color:var(--gold)">20K</div><div class="hm-lbl">Recovered/mo</div></div>
+          <div class="hmw-metric"><div class="hm-val" style="color:var(--green)">97.2%</div><div class="hm-lbl">Success rate</div></div>
+          <div class="hmw-metric"><div class="hm-val" style="color:var(--red)">-18%</div><div class="hm-lbl">Drop-off</div></div>
+        </div>
+        <div class="hmw-score-bar">
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3)"><span>CX coverage</span><span>62%</span></div>
+          <div class="hmw-score-track"><div class="hmw-score-fill" style="width:62%;background:var(--gold)"></div></div>
+        </div>
+        <div style="margin-top:10px;font-size:12px;color:var(--text2)">
+          Cross-channel journey continuity, intent drop-off tracking, and AI-recommended channel sequencing reduce customer friction across RCS, SMS, WhatsApp, Email, and Voice.
+        </div>
+      </div>
+
+      <!-- PILLAR 3 -->
+      <div class="hmw-card">
+        <div class="hmw-icon">🌟</div>
+        <div class="hmw-label" style="color:var(--purple)">Pillar 3 — Employee Experience</div>
+        <div class="hmw-q">"How Might We improve the day-to-day experience of employees by increasing engagement, purpose, and sense of impact?"</div>
+        <div class="hmw-metric-row">
+          <div class="hmw-metric"><div class="hm-val" style="color:var(--purple)">200+</div><div class="hm-lbl">Hrs saved/yr</div></div>
+          <div class="hmw-metric"><div class="hm-val" style="color:var(--green)">50%</div><div class="hm-lbl">Less manual</div></div>
+          <div class="hmw-metric"><div class="hm-val" style="color:var(--gold)">↑87%</div><div class="hm-lbl">Satisfaction</div></div>
+        </div>
+        <div class="hmw-score-bar">
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3)"><span>EX coverage</span><span>55%</span></div>
+          <div class="hmw-score-track"><div class="hmw-score-fill" style="width:55%;background:var(--purple)"></div></div>
+        </div>
+        <div style="margin-top:10px;font-size:12px;color:var(--text2)">
+          AI-automated reporting reduces manual analysis from 8–10 hrs/week to 4–5 hrs/week, freeing teams to focus on strategic optimization rather than data investigation.
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Overall Strategic Score<span class="ct-badge badge-hmw">COMPOSITE</span></div>
+    <div class="three-col">
+      <div><div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:4px"><span>Simplification</span><span style="color:var(--accent)">78 / 100</span></div><div class="hmw-score-track"><div class="hmw-score-fill" style="width:78%;background:var(--accent)"></div></div></div>
+      <div><div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:4px"><span>Customer Experience</span><span style="color:var(--gold)">62 / 100</span></div><div class="hmw-score-track"><div class="hmw-score-fill" style="width:62%;background:var(--gold)"></div></div></div>
+      <div><div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:4px"><span>Employee Experience</span><span style="color:var(--purple)">55 / 100</span></div><div class="hmw-score-track"><div class="hmw-score-fill" style="width:55%;background:var(--purple)"></div></div></div>
+    </div>
+    <div style="margin-top:14px;text-align:center;font-family:var(--fontH);font-size:13px;color:var(--text2)">
+      Composite HMW Score: <span style="font-size:24px;color:var(--accent);font-weight:700">65</span> / 100
+      &nbsp;|&nbsp; Target by Q4 2025: <span style="color:var(--gold)">82 / 100</span>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     ★ TAB: CROSS-CHANNEL JOURNEY MAP
+════════════════════════════════════════════════ -->
+<div id="tab-journey" class="tab">
+  <div class="card">
+    <div class="card-title">Cross-Channel Customer Journey Map<span class="ct-badge badge-ai">AI INSIGHT</span></div>
+    <div class="alert a-amber">⚠️ Intent drops detected at RCS→SMS and WhatsApp→Email transitions. AI recommends improving message continuity and reducing re-authentication friction.</div>
+    <div class="journey-wrap">
+      <div class="journey-nodes">
+
+        <div class="jnode">
+          <div class="jnode-box" style="border-color:var(--accent)">
+            <div class="jch">📱 RCS</div>
+            <div class="jvol">1,000,000 journeys</div>
+            <div class="jrate" style="color:var(--accent)">100%</div>
+          </div>
+        </div>
+
+        <div class="jnode-arrow">
+          <div class="arr-line"></div>
+          <div class="dropoff-tag">-8% drop</div>
+          <div class="friction-tag">Fallback lag</div>
+        </div>
+
+        <div class="jnode">
+          <div class="jnode-box">
+            <div class="jch">💬 SMS</div>
+            <div class="jvol">920,000 journeys</div>
+            <div class="jrate" style="color:var(--green)">92%</div>
+          </div>
+        </div>
+
+        <div class="jnode-arrow">
+          <div class="arr-line"></div>
+          <div class="dropoff-tag">-5% drop</div>
+          <div class="friction-tag">Context loss</div>
+        </div>
+
+        <div class="jnode">
+          <div class="jnode-box">
+            <div class="jch">💚 WhatsApp</div>
+            <div class="jvol">874,000 journeys</div>
+            <div class="jrate" style="color:var(--green)">87.4%</div>
+          </div>
+        </div>
+
+        <div class="jnode-arrow">
+          <div class="arr-line"></div>
+          <div class="dropoff-tag">-12% drop</div>
+          <div class="friction-tag">Re-auth friction</div>
+        </div>
+
+        <div class="jnode">
+          <div class="jnode-box">
+            <div class="jch">📧 Email</div>
+            <div class="jvol">769,120 journeys</div>
+            <div class="jrate" style="color:var(--amber)">76.9%</div>
+          </div>
+        </div>
+
+        <div class="jnode-arrow">
+          <div class="arr-line"></div>
+          <div class="dropoff-tag">-4% drop</div>
+          <div class="friction-tag">Timing gap</div>
+        </div>
+
+        <div class="jnode">
+          <div class="jnode-box" style="border-color:var(--greenDim)">
+            <div class="jch">📞 Voice</div>
+            <div class="jvol">738,355 journeys</div>
+            <div class="jrate" style="color:var(--green)">73.8%</div>
+          </div>
+          <div style="margin-top:6px;font-size:11px;color:var(--green);font-family:var(--fontH);font-weight:700">✅ COMPLETED</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Total Journey Drop-off Summary</div>
+      <div class="funnel-wrap">
+        <div class="funnel-step" style="background:rgba(0,200,255,.08);border:1px solid rgba(0,200,255,.2);width:100%">
+          <span class="fs-label" style="color:var(--accent)">RCS Start</span>
+          <span class="fs-val" style="color:var(--accent)">1,000,000</span>
+        </div>
+        <div class="funnel-step" style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);width:92%">
+          <span class="fs-label" style="color:var(--green)">After SMS</span>
+          <div style="text-align:right"><span class="fs-val" style="color:var(--green)">920,000</span><div class="fs-drop">−80,000</div></div>
+        </div>
+        <div class="funnel-step" style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);width:87%">
+          <span class="fs-label" style="color:var(--green)">After WhatsApp</span>
+          <div style="text-align:right"><span class="fs-val" style="color:var(--green)">874,000</span><div class="fs-drop">−46,000</div></div>
+        </div>
+        <div class="funnel-step" style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);width:77%">
+          <span class="fs-label" style="color:var(--amber)">After Email</span>
+          <div style="text-align:right"><span class="fs-val" style="color:var(--amber)">769,120</span><div class="fs-drop">−104,880</div></div>
+        </div>
+        <div class="funnel-step" style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);width:74%">
+          <span class="fs-label" style="color:var(--green)">Completed</span>
+          <div style="text-align:right"><span class="fs-val" style="color:var(--green)">738,355</span><div class="fs-drop">−261,645 total</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">AI Recommendations for Each Transition<span class="ct-badge badge-ai">AI</span></div>
+      <div class="ai-box">
+        <strong>RCS → SMS:</strong> Implement seamless fallback with pre-loaded context. Reduce handoff delay &lt;500ms. Expected drop-off improvement: −3%.<br><br>
+        <strong>SMS → WhatsApp:</strong> Send a pre-migration message. Carry session state. Expected improvement: −2%.<br><br>
+        <strong>WhatsApp → Email:</strong> Eliminate re-authentication. Use single-sign token. Biggest opportunity — expected improvement: −5%.<br><br>
+        <strong>Email → Voice:</strong> Auto-schedule callback. Pre-fill agent context. Expected improvement: −1.5%.
+      </div>
+      <div class="btn-row" style="margin-top:10px">
+        <button class="btn btn-g" onclick="applyJourneyFix()">⚡ Apply AI Recommendations</button>
+      </div>
+      <div id="journeyFixResult" class="result-panel"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     ★ TAB: INTENT DROP-OFF
+════════════════════════════════════════════════ -->
+<div id="tab-intentdrop" class="tab">
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-label">Baseline Drop-off Rate</div><div class="kpi-val" style="color:var(--red)">10%</div><div class="kpi-sub">Industry benchmark</div></div>
+    <div class="kpi"><div class="kpi-label">Interactions Lost/Month</div><div class="kpi-val" style="color:var(--red)">100,000</div><div class="kpi-sub">Pre-AI baseline</div></div>
+    <div class="kpi"><div class="kpi-label">AI Improvement Target</div><div class="kpi-val green">20%</div><div class="kpi-sub">Retention gain</div></div>
+    <div class="kpi"><div class="kpi-label">Recovered Interactions</div><div class="kpi-val gold" id="recovered-count">20,000</div><div class="kpi-sub">Per month (AI-assisted)</div></div>
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Intent Drop-off Breakdown by Channel Transition<span class="ct-badge badge-ai">AI</span></div>
+      <div style="margin-bottom:10px">
+        <div class="op-row"><div class="op-lbl"><span>RCS → SMS fallback</span><span style="color:var(--red)">8% drop</span></div><div class="bar-track"><div class="bar-fill" style="width:8%;background:var(--red)"></div></div></div>
+        <div class="op-row"><div class="op-lbl"><span>SMS → WhatsApp</span><span style="color:var(--amber)">5% drop</span></div><div class="bar-track"><div class="bar-fill" style="width:5%;background:var(--amber)"></div></div></div>
+        <div class="op-row"><div class="op-lbl"><span>WhatsApp → Email</span><span style="color:var(--red)">12% drop (highest)</span></div><div class="bar-track"><div class="bar-fill" style="width:12%;background:var(--red)"></div></div></div>
+        <div class="op-row"><div class="op-lbl"><span>Email → Voice</span><span style="color:var(--amber)">4% drop</span></div><div class="bar-track"><div class="bar-fill" style="width:4%;background:var(--amber)"></div></div></div>
+        <div class="op-row"><div class="op-lbl"><span>OTP timeout abandonment</span><span style="color:var(--red)">6% drop</span></div><div class="bar-track"><div class="bar-fill" style="width:6%;background:var(--redDim)"></div></div></div>
+      </div>
+      <div class="alert a-red">Most critical: WhatsApp → Email transition causes 12% drop — re-authentication friction is the #1 cause.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">AI Drop-off Reduction Tracker<span class="ct-badge badge-live">LIVE</span></div>
+      <div class="two-col" style="margin-bottom:14px">
+        <div class="rev-big">
+          <div class="amt" style="font-size:28px;color:var(--red)">100,000</div>
+          <div class="lbl">Lost interactions/month<br>(Pre-AI baseline)</div>
+        </div>
+        <div class="rev-big" style="border-color:var(--greenDim)">
+          <div class="amt" style="font-size:28px;color:var(--green)" id="retained-live">20,000</div>
+          <div class="lbl">Recovered/month<br>(AI-assisted, 20% gain)</div>
+        </div>
+      </div>
+      <div class="ai-box">
+        <strong>Pattern detected:</strong> Customers who receive a pre-transition notification message show 34% lower abandonment rates. GMIX AI now auto-triggers these at every channel switch point.
+      </div>
+      <div class="btn-row" style="margin-top:10px">
+        <button class="btn btn-a" onclick="runDropoffSim()">▶ Simulate AI Improvement</button>
+      </div>
+      <div id="dropoffResult" class="result-panel"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Drop-off Reduction Over Time (AI vs Manual)<span class="ct-badge badge-ai">AI TREND</span></div>
+    <div class="chart-wrap"><canvas id="dropoffChart"></canvas></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     ★ TAB: REVENUE IMPACT
+════════════════════════════════════════════════ -->
+<div id="tab-revenueimpact" class="tab">
+  <div class="four-col">
+    <div class="rev-big"><div class="amt">20,000</div><div class="lbl">Retained interactions / month</div></div>
+    <div class="rev-big"><div class="amt" style="color:var(--green)">1,000</div><div class="lbl">Additional conversions / month</div></div>
+    <div class="rev-big"><div class="amt">$40,000</div><div class="lbl">Incremental revenue / month</div></div>
+    <div class="rev-big"><div class="amt" style="font-size:32px">$480,000</div><div class="lbl">Annual revenue potential</div></div>
+  </div>
+
+  <div class="two-col" style="margin-top:16px">
+    <div class="card">
+      <div class="card-title">Revenue Calculation Model<span class="ct-badge badge-ai">ILLUSTRATIVE</span></div>
+      <div class="calc-row"><span class="cr-lbl">Total journeys / month</span><span class="cr-val">1,000,000</span></div>
+      <div class="calc-row"><span class="cr-lbl">Baseline drop-off rate</span><span class="cr-val" style="color:var(--red)">10%</span></div>
+      <div class="calc-row"><span class="cr-lbl">Interactions lost (baseline)</span><span class="cr-val" style="color:var(--red)">100,000</span></div>
+      <div class="calc-row"><span class="cr-lbl">AI improvement in retention</span><span class="cr-val" style="color:var(--green)">20%</span></div>
+      <div class="calc-divider"></div>
+      <div class="calc-row"><span class="cr-lbl">Recovered interactions / month</span><span class="cr-val gold">20,000</span></div>
+      <div class="calc-row"><span class="cr-lbl">Conversion rate (5%)</span><span class="cr-val">× 5%</span></div>
+      <div class="calc-row"><span class="cr-lbl">Additional conversions</span><span class="cr-val gold">1,000</span></div>
+      <div class="calc-row"><span class="cr-lbl">Avg revenue per conversion</span><span class="cr-val">× $40</span></div>
+      <div class="calc-divider"></div>
+      <div class="calc-row" style="background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.2);border-radius:6px">
+        <span class="cr-lbl" style="font-family:var(--fontH);font-weight:700;color:var(--gold)">Monthly Revenue Impact</span>
+        <span class="cr-val gold" style="font-size:22px">$40,000</span>
+      </div>
+      <div class="calc-row" style="background:rgba(245,166,35,.15);border:1px solid rgba(245,166,35,.25);border-radius:6px;margin-top:6px">
+        <span class="cr-lbl" style="font-family:var(--fontH);font-weight:700;color:var(--gold)">Annual Revenue Impact</span>
+        <span class="cr-val gold" style="font-size:22px">$480,000</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Revenue Scenario Explorer<span class="ct-badge badge-new">INTERACTIVE</span></div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:12px">Adjust parameters to model different scenarios:</div>
+
+      <div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:4px">
+          <span>Monthly Journeys</span><span id="lbl-journeys" style="color:var(--accent)">1,000,000</span>
+        </div>
+        <input type="range" id="rng-journeys" min="100000" max="5000000" step="100000" value="1000000" style="width:100%;accent-color:var(--accent)" oninput="recalcRevenue()">
+      </div>
+      <div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:4px">
+          <span>AI Retention Improvement %</span><span id="lbl-improve" style="color:var(--green)">20%</span>
+        </div>
+        <input type="range" id="rng-improve" min="5" max="40" step="1" value="20" style="width:100%;accent-color:var(--green)" oninput="recalcRevenue()">
+      </div>
+      <div style="margin-bottom:16px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:4px">
+          <span>Avg Revenue per Conversion ($)</span><span id="lbl-avg" style="color:var(--gold)">$40</span>
+        </div>
+        <input type="range" id="rng-avg" min="10" max="200" step="5" value="40" style="width:100%;accent-color:var(--gold)" oninput="recalcRevenue()">
+      </div>
+
+      <div style="background:var(--bg0);border:1px solid var(--borderBright);border-radius:8px;padding:14px;text-align:center">
+        <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">Projected Annual Impact</div>
+        <div id="calc-result" style="font-family:var(--fontH);font-size:36px;font-weight:700;color:var(--gold)">$480,000</div>
+        <div id="calc-monthly" style="font-size:13px;color:var(--text2);margin-top:4px">$40,000 / month · 1,000 conversions</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Revenue Growth Projection — 12 Months</div>
+    <div class="chart-wrap"><canvas id="revenueChart"></canvas></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     ★ TAB: TIME SAVED
+════════════════════════════════════════════════ -->
+<div id="tab-timesaved" class="tab">
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-label">Hours Saved / Week / Team</div><div class="kpi-val green">4–5 hrs</div><div class="kpi-sub">Down from 8–10 hrs/week</div></div>
+    <div class="kpi"><div class="kpi-label">Annual Hours Saved</div><div class="kpi-val green">200+</div><div class="kpi-sub">Per analytics team</div></div>
+    <div class="kpi"><div class="kpi-label">Manual Work Reduction</div><div class="kpi-val blue">40–50%</div><div class="kpi-sub">AI insight automation</div></div>
+    <div class="kpi"><div class="kpi-label">Focus Shift</div><div class="kpi-val gold">Strategic</div><div class="kpi-sub">From reporting → optimization</div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Before vs. After AI Insights — Weekly Time Allocation</div>
+    <div class="time-saved-visual">
+      <div class="ts-col ts-before">
+        <div style="font-family:var(--fontH);font-size:12px;font-weight:700;letter-spacing:1px;color:var(--red);margin-bottom:8px">WITHOUT AI INSIGHTS</div>
+        <div class="ts-hr">8–10</div>
+        <div class="ts-lbl">hours / week</div>
+        <div class="ts-sub">Manual campaign report review<br>Cross-channel data collation<br>Spreadsheet-based analysis<br>Reactive problem-solving</div>
+      </div>
+      <div class="ts-divider">
+        <div style="font-size:26px">→</div>
+        <div style="font-size:11px;font-family:var(--fontH);color:var(--green);font-weight:700">AI<br>AUTO-<br>MATION</div>
+      </div>
+      <div class="ts-col ts-after">
+        <div style="font-family:var(--fontH);font-size:12px;font-weight:700;letter-spacing:1px;color:var(--green);margin-bottom:8px">WITH GMIX AI INSIGHTS</div>
+        <div class="ts-hr">4–5</div>
+        <div class="ts-lbl">hours / week</div>
+        <div class="ts-sub">AI-generated insight summaries<br>Automated drop-off detection<br>Proactive optimization alerts<br>Time freed for strategy</div>
+      </div>
+    </div>
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Annual Hours Saved Calculator<span class="ct-badge badge-new">INTERACTIVE</span></div>
+      <div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:4px">
+          <span>Number of Analytics Teams</span><span id="lbl-teams" style="color:var(--accent)">3</span>
+        </div>
+        <input type="range" id="rng-teams" min="1" max="20" step="1" value="3" style="width:100%;accent-color:var(--accent)" oninput="recalcTime()">
+      </div>
+      <div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:4px">
+          <span>Hours saved per week per team</span><span id="lbl-hrs" style="color:var(--green)">5 hrs</span>
+        </div>
+        <input type="range" id="rng-hrs" min="2" max="10" step="1" value="5" style="width:100%;accent-color:var(--green)" oninput="recalcTime()">
+      </div>
+      <div style="background:var(--bg0);border:1px solid var(--borderBright);border-radius:8px;padding:14px;text-align:center;margin-top:8px">
+        <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">Total Annual Hours Saved</div>
+        <div id="time-result" style="font-family:var(--fontH);font-size:42px;font-weight:700;color:var(--green)">780</div>
+        <div id="time-sub" style="font-size:13px;color:var(--text2);margin-top:4px">hrs/yr across 3 teams</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">What Teams Do With Recovered Time</div>
+      <div class="op-row"><div class="op-lbl"><span>Strategic campaign optimization</span><span>35%</span></div><div class="bar-track"><div class="bar-fill" style="width:35%;background:var(--accent)"></div></div></div>
+      <div class="op-row"><div class="op-lbl"><span>Cross-channel journey design</span><span>28%</span></div><div class="bar-track"><div class="bar-fill" style="width:28%;background:var(--purple)"></div></div></div>
+      <div class="op-row"><div class="op-lbl"><span>Client engagement & QBRs</span><span>20%</span></div><div class="bar-track"><div class="bar-fill" style="width:20%;background:var(--gold)"></div></div></div>
+      <div class="op-row"><div class="op-lbl"><span>New channel testing (RCS, Voice)</span><span>12%</span></div><div class="bar-track"><div class="bar-fill" style="width:12%;background:var(--green)"></div></div></div>
+      <div class="op-row"><div class="op-lbl"><span>Training & upskilling</span><span>5%</span></div><div class="bar-track"><div class="bar-fill" style="width:5%;background:var(--text3)"></div></div></div>
+      <div class="ai-box" style="margin-top:12px">
+        AI-automated insight summaries enable teams to move from <strong>reactive analysis</strong> to <strong>proactive optimization</strong> of customer communication journeys.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     ★ TAB: EMPLOYEE EXPERIENCE
+════════════════════════════════════════════════ -->
+<div id="tab-employeeexp" class="tab">
+  <div class="card">
+    <div class="card-title">Employee Experience Dashboard<span class="ct-badge badge-new">NEW PILLAR</span></div>
+    <div class="alert a-purple">🌟 Employee experience is the third strategic pillar. GMIX AI reduces manual drudgery, creates visibility into team impact, and increases sense of purpose.</div>
+    <div class="four-col" style="margin-top:14px">
+      <div class="emp-metric"><div class="em-val">87%</div><div class="em-lbl">Team Satisfaction</div><div class="em-trend"><span style="color:var(--green)">▲ 12%</span> since AI adoption</div></div>
+      <div class="emp-metric"><div class="em-val">50%</div><div class="em-lbl">Manual Work Reduced</div><div class="em-trend">8–10 hrs → 4–5 hrs/wk</div></div>
+      <div class="emp-metric"><div class="em-val">200+</div><div class="em-lbl">Hours Freed/yr</div><div class="em-trend"><span style="color:var(--green)">↑ 42%</span> more strategic time</div></div>
+      <div class="emp-metric"><div class="em-val">94%</div><div class="em-lbl">Purpose Score</div><div class="em-trend">Teams see direct impact</div></div>
+    </div>
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Team Performance — Daily Impact View<span class="ct-badge badge-live">LIVE</span></div>
+      <div id="teamRoster"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Workload Distribution Before vs After AI</div>
+      <div class="chart-wrap" style="height:220px"><canvas id="workloadChart"></canvas></div>
+      <div class="ai-box" style="margin-top:12px">
+        AI has shifted the team's weekly focus from <strong>reporting-heavy tasks</strong> toward <strong>client strategy, optimization, and innovation</strong> — increasing both impact and job satisfaction.
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Team Engagement KPIs — Monthly Trend</div>
+    <div class="chart-wrap"><canvas id="engagementChart"></canvas></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     TAB: GLOBAL TRAFFIC MAP
+════════════════════════════════════════════════ -->
+<div id="tab-trafficmap" class="tab">
+  <div class="card">
+    <div class="card-title">Global Telecom Network — Animated Traffic Flow<span class="ct-badge badge-live">LIVE</span></div>
+    <svg class="tsvg" viewBox="0 0 900 420" height="380">
+      <defs><marker id="ma" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5"/></marker></defs>
+      <circle class="nd" cx="120" cy="230" r="10"/><text x="80" y="258" class="nl">N. America</text>
+      <circle class="nd" cx="350" cy="120" r="10"/><text x="330" y="108" class="nl">Europe</text>
+      <circle class="nd" cx="520" cy="260" r="10"/><text x="498" y="288" class="nl">Middle East</text>
+      <circle class="nd" cx="760" cy="200" r="10"/><text x="740" y="188" class="nl">Asia</text>
+      <circle class="nd" cx="630" cy="340" r="10"/><text x="608" y="368" class="nl">Australia</text>
+      <circle class="nd" cx="220" cy="310" r="10"/><text x="192" y="336" class="nl">S. America</text>
+      <line class="rt" x1="120" y1="230" x2="350" y2="120"/>
+      <line class="rt" x1="350" y1="120" x2="520" y2="260"/>
+      <line class="rt" x1="520" y1="260" x2="760" y2="200"/>
+      <line class="rt" x1="760" y1="200" x2="630" y2="340"/>
+      <line class="rt" x1="120" y1="230" x2="220" y2="310"/>
+      <line class="rt" x1="350" y1="120" x2="760" y2="200"/>
+      <line class="aline" x1="120" y1="230" x2="350" y2="120"/>
+      <line class="aline" x1="350" y1="120" x2="520" y2="260" style="animation-delay:.5s"/>
+      <line class="aline" x1="520" y1="260" x2="760" y2="200" style="animation-delay:1s"/>
+      <circle class="pk" r="5"><animateMotion dur="3s" repeatCount="indefinite" path="M120 230 L350 120"/></circle>
+      <circle class="pk" r="5"><animateMotion dur="2.5s" repeatCount="indefinite" begin="1s" path="M350 120 L520 260"/></circle>
+      <circle class="pk" r="5"><animateMotion dur="3.5s" repeatCount="indefinite" begin=".5s" path="M520 260 L760 200"/></circle>
+      <circle class="pk" r="5"><animateMotion dur="4s" repeatCount="indefinite" begin="1.5s" path="M760 200 L630 340"/></circle>
+      <circle class="pk" r="5"><animateMotion dur="3.2s" repeatCount="indefinite" begin=".8s" path="M120 230 L220 310"/></circle>
+    </svg>
+  </div>
+  <div class="card">
+    <div class="card-title">Canvas Traffic Visualizer</div>
+    <canvas id="trafficMapCanvas" height="180" style="border-radius:6px;border:1px solid var(--border);width:100%"></canvas>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     TAB: LATENCY HEATMAP
+════════════════════════════════════════════════ -->
+<div id="tab-heatmap" class="tab">
+  <div class="card">
+    <div class="card-title">Global Latency Heatmap — Live<span class="ct-badge badge-live">LIVE</span></div>
+    <div class="heat-grid" id="heatGrid"></div>
+    <div style="display:flex;gap:18px;margin-top:10px;font-size:12px;color:var(--text2)">
+      <span><span style="color:var(--green)">■</span> Low (&lt;1.5s)</span>
+      <span><span style="color:var(--amber)">■</span> Medium (1.5–3s)</span>
+      <span><span style="color:var(--red)">■</span> High (&gt;3s)</span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Heatmap Canvas</div>
+    <canvas id="heatmapCanvas" height="200" style="border-radius:6px;width:100%"></canvas>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     TAB: GLOBE
+════════════════════════════════════════════════ -->
+<div id="tab-globe" class="tab">
+  <div class="card">
+    <div class="card-title">3D Rotating Telecom Globe<span class="ct-badge badge-live">LIVE</span></div>
+    <canvas id="globeCanvas" width="460" height="460" style="border-radius:50%;border:1px solid var(--border);display:block;margin:0 auto"></canvas>
+    <p style="text-align:center;font-size:12px;color:var(--text3);margin-top:10px">Green nodes = active operator hubs | Gold arcs = data packets in transit</p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     TAB: AI ROUTING
+════════════════════════════════════════════════ -->
+<div id="tab-routing" class="tab">
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Current Routing Status</div>
+      <div style="margin-bottom:12px;font-size:13px;color:var(--text2)">Active Operator: <strong id="activeOperator" style="color:var(--accent)">Jio</strong></div>
+      <div style="list-style:none">
+        <div style="padding:7px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--text2)">✔ Monitoring traffic across all routes</div>
+        <div style="padding:7px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--text2)">✔ Detecting congestion in real-time</div>
+        <div style="padding:7px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--text2)">✔ Predicting operator failure probability</div>
+        <div style="padding:7px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--text2)">✔ Auto-switching operator on threshold breach</div>
+        <div style="padding:7px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--text2)">✔ Rerouting messages with &lt;200ms failover</div>
+        <div style="padding:7px 0;font-size:13px;color:var(--text2)">✔ Network stabilized after last incident</div>
+      </div>
+      <div class="btn-row" style="margin-top:14px">
+        <button class="btn btn-c" onclick="switchOperator()">🔀 Switch Operator</button>
+        <button class="btn btn-a" onclick="optimizeRoute()">⚡ Optimize Routes</button>
+      </div>
+      <div id="routingSwitchFeedback" class="result-panel"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Operator Health Status<span class="ct-badge badge-live">LIVE</span></div>
+      <div id="routingOpBars"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Routing Optimization Table</div>
+    <table class="tbl">
+      <thead><tr><th>Route</th><th>Current Cost</th><th>Success Rate</th><th>Avg Latency</th><th>Recommended</th><th>Savings</th></tr></thead>
+      <tbody>
+        <tr><td>Route A</td><td>$0.0032</td><td>91%</td><td>3.1s</td><td><span class="pill pill-b">Route B</span></td><td><span class="pill pill-g">12%</span></td></tr>
+        <tr><td>Route C</td><td>$0.0035</td><td>93%</td><td>2.4s</td><td><span class="pill pill-b">Route D</span></td><td><span class="pill pill-g">9%</span></td></tr>
+        <tr><td>Route E</td><td>$0.0041</td><td>89%</td><td>2.9s</td><td><span class="pill pill-b">Route F</span></td><td><span class="pill pill-g">7%</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     TAB: AI SIMULATION
+════════════════════════════════════════════════ -->
+<div id="tab-simulation" class="tab">
+  <div class="card">
+    <div class="card-title">AI Failure Prevention Simulation<span class="ct-badge badge-ai">AI</span></div>
+    <div class="btn-row">
+      <button class="btn btn-a" onclick="runScenario('otp')">▶ OTP Traffic Spike</button>
+      <button class="btn btn-r" onclick="runScenario('operator')">▶ Operator Failure</button>
+      <button class="btn btn-c" onclick="runScenario('route')">▶ Route Congestion</button>
+      <button class="btn btn-g" onclick="runScenario('fraud')">▶ Fraud Detection</button>
+      <button class="btn btn-p" onclick="clearSimConsole()">✖ Clear</button>
+    </div>
+    <div class="console" id="simConsole" style="min-height:200px"><span class="cl-info">[System] GMIX AI Simulation Engine ready. Select a scenario.</span></div>
+  </div>
+  <div class="two-col">
+    <div class="card"><div class="card-title">Simulation Result</div><div id="simResultPanel" class="result-panel" style="display:block;color:var(--text3)">No simulation run yet.</div></div>
+    <div class="card"><div class="card-title">Network Status</div><div id="simNetworkStatus" class="ai-box">Status: <strong>IDLE</strong><br>Last simulation: None</div></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     TAB: TRAFFIC PREDICTION
+════════════════════════════════════════════════ -->
+<div id="tab-prediction" class="tab">
+  <div class="card"><div class="card-title">AI Traffic Prediction — Hourly Forecast<span class="ct-badge badge-ai">AI</span></div><div class="chart-wrap"><canvas id="predictionChart"></canvas></div></div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Predicted Peak Times</div>
+      <div class="alert a-amber">⚠️ 18:00–20:00 IST — India OTP traffic peak (predicted +42%)</div>
+      <div class="alert a-blue">ℹ️ 09:00–11:00 GMT — Europe campaign traffic (predicted +18%)</div>
+      <div class="alert a-green">✅ 02:00–05:00 UTC — Low traffic window; ideal for maintenance</div>
+    </div>
+    <div class="card">
+      <div class="card-title">AI Prediction Confidence</div>
+      <div class="op-row"><div class="op-lbl"><span>India OTP Spike</span><span>94%</span></div><div class="bar-track"><div class="bar-fill" style="width:94%"></div></div></div>
+      <div class="op-row"><div class="op-lbl"><span>Europe Campaign</span><span>82%</span></div><div class="bar-track"><div class="bar-fill" style="width:82%;background:var(--accent)"></div></div></div>
+      <div class="op-row"><div class="op-lbl"><span>LATAM WhatsApp</span><span>77%</span></div><div class="bar-track"><div class="bar-fill" style="width:77%;background:var(--purple)"></div></div></div>
+      <div class="op-row"><div class="op-lbl"><span>Africa A2P SMS</span><span>68%</span></div><div class="bar-track"><div class="bar-fill" style="width:68%;background:var(--amber)"></div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     TAB: OPERATORS
+════════════════════════════════════════════════ -->
+<div id="tab-operators" class="tab">
+  <div class="card">
+    <div class="card-title">Global Operator Performance — Live<span class="ct-badge badge-live">LIVE</span></div>
+    <div id="operatorBarsContainer"></div>
+    <p style="font-size:11px;color:var(--text3);margin-top:8px">Updates every 2.5 seconds.</p>
+  </div>
+  <div class="two-col">
+    <div class="card"><div class="card-title">Operator Chart</div><div class="chart-wrap"><canvas id="opChartTab"></canvas></div></div>
+    <div class="card">
+      <div class="card-title">Top Operators</div>
+      <div class="insight-grid">
+        <div class="insight-tile"><div class="iv">Operator B</div><div class="il">Best DLR</div></div>
+        <div class="insight-tile"><div class="iv">T-Mobile</div><div class="il">Lowest Latency</div></div>
+        <div class="insight-tile"><div class="iv">Airtel</div><div class="il">Best Cost</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     TAB: RANKING
+════════════════════════════════════════════════ -->
+<div id="tab-ranking" class="tab">
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Predictive Operator Ranking — AI Scored<span class="ct-badge badge-ai">AI</span></div>
+      <div id="rankingList"></div>
+      <button class="btn btn-p" onclick="refreshRanking()" style="margin-top:10px">🔄 Refresh Ranking</button>
+    </div>
+    <div class="card">
+      <div class="card-title">AI Scoring Model</div>
+      <div class="ai-box">
+        <strong>Ranking Criteria:</strong><br><br>
+        • Delivery success rate (40%)<br>
+        • Average latency (25%)<br>
+        • Cost per message (20%)<br>
+        • Uptime reliability (15%)<br><br>
+        Rankings update every 3 seconds based on live telemetry.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     TAB: CAMPAIGN FORECAST
+════════════════════════════════════════════════ -->
+<div id="tab-forecast" class="tab">
+  <div class="card">
+    <div class="card-title">Campaign Success Forecast — AI Predicted<span class="ct-badge badge-ai">AI</span></div>
+    <div id="forecastBarsContainer"></div>
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Best Campaign Windows</div>
+      <table class="tbl">
+        <thead><tr><th>Channel</th><th>Region</th><th>Best Time</th><th>Predicted Success</th></tr></thead>
+        <tbody>
+          <tr><td>OTP SMS</td><td>India</td><td>18:30–20:00</td><td><span class="pill pill-g">97.2%</span></td></tr>
+          <tr><td>WhatsApp</td><td>LATAM</td><td>19:00–21:00</td><td><span class="pill pill-g">94.8%</span></td></tr>
+          <tr><td>A2P SMS</td><td>Africa</td><td>08:00–10:00</td><td><span class="pill pill-g">91.3%</span></td></tr>
+          <tr><td>RCS</td><td>Europe</td><td>10:00–12:00</td><td><span class="pill pill-a">89.6%</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">Run Campaign Forecast</div>
+      <div class="btn-row"><button class="btn btn-p" onclick="runForecast()">📊 Run AI Forecast</button></div>
+      <div id="forecastResult" class="result-panel"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     TAB: CUSTOMER INSIGHTS
+════════════════════════════════════════════════ -->
+<div id="tab-insights" class="tab">
+  <div class="insight-grid">
+    <div class="insight-tile"><div class="iv">18:30–20:00</div><div class="il">Best OTP Time (India)</div></div>
+    <div class="insight-tile"><div class="iv">97.2%</div><div class="il">Campaign Success Rate</div></div>
+    <div class="insight-tile"><div class="iv">Operator B</div><div class="il">Top Performer</div></div>
+    <div class="insight-tile"><div class="iv">19:00–21:00</div><div class="il">Best WhatsApp Window</div></div>
+    <div class="insight-tile"><div class="iv">38.4%</div><div class="il">Avg Engagement Rate</div></div>
+    <div class="insight-tile"><div class="iv">India</div><div class="il">Top OTP Region</div></div>
+  </div>
+  <div class="two-col" style="margin-top:16px">
+    <div class="card">
+      <div class="card-title">Channel Performance Breakdown</div>
+      <div class="op-row"><div class="op-lbl"><span>A2P SMS</span><span>96.8%</span></div><div class="bar-track"><div class="bar-fill" style="width:96%"></div></div></div>
+      <div class="op-row"><div class="op-lbl"><span>WhatsApp Business</span><span>94.2%</span></div><div class="bar-track"><div class="bar-fill" style="width:94%;background:#25d366"></div></div></div>
+      <div class="op-row"><div class="op-lbl"><span>OTP Authentication</span><span>98.1%</span></div><div class="bar-track"><div class="bar-fill" style="width:98%"></div></div></div>
+      <div class="op-row"><div class="op-lbl"><span>RCS Messaging</span><span>87.5%</span></div><div class="bar-track"><div class="bar-fill" style="width:87%;background:var(--accent)"></div></div></div>
+      <div class="op-row"><div class="op-lbl"><span>Email</span><span>82.3%</span></div><div class="bar-track"><div class="bar-fill" style="width:82%;background:var(--purple)"></div></div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">AI Customer Insight<span class="ct-badge badge-ai">AI</span></div>
+      <div class="ai-box">
+        • India OTP at <strong>all-time high</strong> — recommend pre-scaling Route B capacity.<br><br>
+        • WhatsApp Business seeing <strong>18% growth</strong> in LATAM enterprise segment.<br><br>
+        • RCS adoption increasing in Germany, France, UK (+23% MoM).<br><br>
+        • Fraud patterns detected in 3 grey route corridors — auto-blocked.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     TAB: FRAUD
+════════════════════════════════════════════════ -->
+<div id="tab-fraud" class="tab">
+  <div class="card">
+    <div class="card-title">A2P SMS Fraud Detection — Live<span class="ct-badge badge-live">LIVE</span></div>
+    <div id="fraudFeed" style="max-height:240px;overflow-y:auto"></div>
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Fraud Statistics</div>
+      <div class="insight-grid">
+        <div class="insight-tile"><div class="iv" id="fraudBlocked">0</div><div class="il">Blocked Today</div></div>
+        <div class="insight-tile"><div class="iv">3</div><div class="il">Grey Routes</div></div>
+        <div class="insight-tile"><div class="iv">1</div><div class="il">SIM Farm Alerts</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Fraud Prevention Actions</div>
+      <div class="btn-row">
+        <button class="btn btn-r" onclick="blockRoute()">🔒 Block Suspicious Route</button>
+        <button class="btn btn-p" onclick="scanRoutes()">🔍 Scan All Routes</button>
+      </div>
+      <div id="fraudActionFeedback" class="result-panel"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     TAB: SPAM
+════════════════════════════════════════════════ -->
+<div id="tab-spam" class="tab">
+  <div class="card">
+    <div class="card-title">Spam Traffic Detection — Live Feed<span class="ct-badge badge-live">LIVE</span></div>
+    <div id="spamFeed" style="max-height:260px;overflow-y:auto"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Spam Statistics</div>
+    <div class="insight-grid">
+      <div class="insight-tile"><div class="iv" id="spamCount">0</div><div class="il">Blocked Today</div></div>
+      <div class="insight-tile"><div class="iv">99.1%</div><div class="il">AI Accuracy</div></div>
+      <div class="insight-tile"><div class="iv">0.9%</div><div class="il">False Positives</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     TAB: LOGS
+════════════════════════════════════════════════ -->
+<div id="tab-logs" class="tab">
+  <div class="card">
+    <div class="card-title">System Event Log — Real-Time<span class="ct-badge badge-live">LIVE</span></div>
+    <div class="btn-row" style="margin-bottom:10px">
+      <button class="btn btn-p" onclick="clearLog()">✖ Clear Log</button>
+      <button class="btn btn-c" onclick="exportLog()">💾 Export Log</button>
+    </div>
+    <div class="console" id="systemLogBox" style="height:400px;min-height:400px"></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     TAB: NOC WALL
+════════════════════════════════════════════════ -->
+<div id="tab-nocwall" class="tab">
+  <div class="card">
+    <div class="card-title">Telecom NOC Video Wall — Command Center</div>
+    <div class="noc-wall">
+      <div class="noc-tile" onclick="showTab('trafficmap')"><div class="ti">🗺</div>Global Traffic Map</div>
+      <div class="noc-tile" onclick="showTab('routing')"><div class="ti">🔀</div>AI Routing</div>
+      <div class="noc-tile" onclick="showTab('heatmap')"><div class="ti">🔥</div>Latency Heatmap</div>
+      <div class="noc-tile alert-tile" onclick="showTab('alerts')"><div class="ti">🔔</div>Active Alerts (6)</div>
+      <div class="noc-tile" onclick="showTab('operators')"><div class="ti">📡</div>Operator Health</div>
+      <div class="noc-tile" onclick="showTab('prediction')"><div class="ti">📈</div>Traffic Analytics</div>
+      <div class="noc-tile" onclick="showTab('fraud')"><div class="ti">🛡</div>Fraud Detection</div>
+      <div class="noc-tile" onclick="showTab('logs')"><div class="ti">📋</div>System Logs</div>
+      <div class="noc-tile" onclick="showTab('globe')"><div class="ti">🌍</div>3D Globe View</div>
+      <div class="noc-tile" onclick="showTab('simulation')"><div class="ti">⚡</div>AI Simulation</div>
+      <div class="noc-tile" onclick="showTab('journey')"><div class="ti">🔁</div>Journey Map</div>
+      <div class="noc-tile" onclick="showTab('revenueimpact')"><div class="ti">💰</div>Revenue Impact</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /content -->
+</div><!-- /layout -->
+
+<div id="toast"></div>
+
+<!-- ══════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════ -->
+<script>
+/* ── HELPERS ── */
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.style.display='block';
+  clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',3000);
+}
+function sysLog(msg,type='info'){
+  const b=document.getElementById('systemLogBox');if(!b)return;
+  const ts=new Date().toLocaleTimeString();
+  const cls={'error':'cl-err','warn':'cl-warn','info':'cl-info','good':'cl-good'}[type]||'cl-info';
+  b.innerHTML+=`<span class="${cls}">[${ts}] ${msg}</span>\n`;
+  b.scrollTop=b.scrollHeight;
+}
+function fmtNum(n){return Math.round(n).toLocaleString()}
+
+/* ── TAB SWITCHING ── */
+function showTab(id){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.sb-btn').forEach(b=>b.classList.remove('active'));
+  const tab=document.getElementById('tab-'+id);
+  const btn=document.getElementById('btn-'+id);
+  if(tab)tab.classList.add('active');
+  if(btn)btn.classList.add('active');
+  sysLog(`Opened panel: ${id}`);
+}
+
+/* ── LIVE DATA ── */
+let ld={messages:5240000,mps:13200,otp:3400,otpTotal:1200000,latency:1.8,success:96.8};
+const operators=['Jio','Airtel','Vodafone','AT&T','T-Mobile','Verizon','Telefonica','Orange','TIM','Vivo','Claro','Telstra','China Mobile','NTT','BSNL'];
+let opIdx=0;
+
+function updateLive(){
+  ld.messages+=Math.floor(Math.random()*300+100);
+  ld.mps+=Math.floor(Math.random()*10-4);
+  ld.otp+=Math.floor(Math.random()*8-2);
+  ld.otpTotal+=Math.floor(Math.random()*1000+200);
+  ld.latency=+(1.4+Math.random()*.8).toFixed(2);
+  ld.success=+(95+Math.random()*2.5).toFixed(1);
+  const s=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};
+  s('kpi-messages',fmtNum(ld.messages));s('kpi-success',ld.success+'%');
+  s('kpi-latency',ld.latency+'s');s('kpi-mps',fmtNum(ld.mps));
+  s('kpi-otp',fmtNum(ld.otp));s('kpi-otpTotal',fmtNum(ld.otpTotal));
+  s('gh-msg',fmtNum(ld.messages));s('gh-dlr',ld.success+'%');s('gh-lat',ld.latency+'s');
+}
+setInterval(updateLive,2000);
+
+/* ── OVERVIEW BARS ── */
+function buildOverviewBars(){
+  const c=document.getElementById('overviewBars');if(!c)return;
+  [{n:'Operator A',v:95},{n:'Operator B',v:98},{n:'Operator C',v:92},{n:'Operator D',v:90}].forEach(o=>{
+    c.innerHTML+=`<div class="op-row"><div class="op-lbl"><span>${o.n}</span><span>${o.v}%</span></div><div class="bar-track"><div class="bar-fill" style="width:${o.v}%"></div></div></div>`;
+  });
+}
+buildOverviewBars();
+
+/* ── TREND BARS ── */
+function buildTrendBars(id){
+  const c=document.getElementById(id);if(!c)return;
+  [30,42,54,62,72,88,104,118].forEach(h=>{
+    const d=document.createElement('div');
+    d.style.cssText=`width:24px;background:var(--accentDim);border-radius:3px 3px 0 0;height:${h}px;opacity:.8`;
+    c.appendChild(d);
+  });
+}
+buildTrendBars('trendBarsOv');
+
+/* ── FULL OPERATOR BARS ── */
+function buildOpBars(containerId){
+  const c=document.getElementById(containerId);if(!c)return;
+  c.innerHTML=operators.map(op=>{
+    const v=Math.floor(Math.random()*7)+90;
+    return `<div class="op-row"><div class="op-lbl"><span>${op}</span><span id="ov-${containerId}-${op}">${v}%</span></div><div class="bar-track"><div class="bar-fill" id="ob-${containerId}-${op}" style="width:${v}%"></div></div></div>`;
+  }).join('');
+}
+buildOpBars('operatorBarsContainer');buildOpBars('routingOpBars');
+
+function updateOpBars(containerId){
+  operators.forEach(op=>{
+    const v=Math.floor(Math.random()*7)+90;
+    const b=document.getElementById(`ob-${containerId}-${op}`);
+    const l=document.getElementById(`ov-${containerId}-${op}`);
+    if(b)b.style.width=v+'%';if(l)l.textContent=v+'%';
+  });
+}
+setInterval(()=>{updateOpBars('operatorBarsContainer');updateOpBars('routingOpBars');},2500);
+
+/* ── HEATMAP GRID ── */
+(function(){
+  const g=document.getElementById('heatGrid');if(!g)return;
+  for(let i=0;i<80;i++){const c=document.createElement('div');c.className='heat-cell';c.id='hc'+i;g.appendChild(c);}
+  function upd(){for(let i=0;i<80;i++){const c=document.getElementById('hc'+i);if(!c)continue;const v=Math.random();c.style.background=v>.75?'#ef4444':v>.45?'#f59e0b':'#22c55e';}}
+  upd();setInterval(upd,2000);
+})();
+
+/* ── HEATMAP CANVAS ── */
+(function(){
+  const cv=document.getElementById('heatmapCanvas');if(!cv)return;
+  const ctx=cv.getContext('2d');
+  function draw(){
+    cv.width=cv.offsetWidth||860;const W=cv.width,H=cv.height,cols=20,rows=5,cw=W/cols,ch=H/rows;
+    for(let x=0;x<cols;x++)for(let y=0;y<rows;y++){
+      const v=Math.random();const r=v>.7?239:v>.4?245:34,g2=v>.7?68:v>.4?158:197,b=v>.7?68:v>.4?11:94;
+      ctx.fillStyle=`rgba(${r},${g2},${b},0.85)`;ctx.fillRect(x*cw+1,y*ch+1,cw-2,ch-2);
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ── TRAFFIC MAP CANVAS ── */
+(function(){
+  const cv=document.getElementById('trafficMapCanvas');if(!cv)return;
+  cv.width=cv.offsetWidth||860;const ctx=cv.getContext('2d'),W=cv.width,H=cv.height;
+  const dots=Array.from({length:8},(_,i)=>({t:i/8}));
+  function draw(){
+    ctx.clearRect(0,0,W,H);ctx.fillStyle='#020617';ctx.fillRect(0,0,W,H);
+    ctx.beginPath();ctx.moveTo(60,H/2);ctx.bezierCurveTo(240,60,600,140,W-60,H/2);
+    ctx.strokeStyle='rgba(0,200,255,0.3)';ctx.lineWidth=2;ctx.stroke();
+    dots.forEach(d=>{
+      d.t+=0.003;if(d.t>1)d.t-=1;const t=d.t;
+      const x=(1-t)**3*60+3*(1-t)**2*t*240+3*(1-t)*t*t*600+t**3*(W-60);
+      const y=(1-t)**3*(H/2)+3*(1-t)**2*t*60+3*(1-t)*t*t*140+t**3*(H/2);
+      ctx.beginPath();ctx.arc(x,y,4,0,6.28);ctx.fillStyle='#f5a623';ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ── GLOBE CANVAS ── */
+(function(){
+  const cv=document.getElementById('globeCanvas');if(!cv)return;
+  const ctx=cv.getContext('2d'),W=460,H=460,CX=230,CY=230,R=170;let angle=0;
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#020617';ctx.beginPath();ctx.arc(CX,CY,R+15,0,Math.PI*2);ctx.fill();
+    for(let lat=-60;lat<=60;lat+=30){const ry=Math.sin(lat*Math.PI/180)*R,rx=Math.cos(lat*Math.PI/180)*R;ctx.beginPath();ctx.ellipse(CX,CY+ry,rx,rx*0.2,0,0,Math.PI*2);ctx.strokeStyle='rgba(0,200,255,0.1)';ctx.lineWidth=1;ctx.stroke();}
+    for(let i=0;i<6;i++){const a=angle+i*Math.PI/3;ctx.beginPath();ctx.ellipse(CX,CY,R*Math.abs(Math.cos(a)),R,0,0,Math.PI*2);ctx.strokeStyle='rgba(0,200,255,0.08)';ctx.lineWidth=1;ctx.stroke();}
+    ctx.beginPath();ctx.arc(CX,CY,R,0,Math.PI*2);ctx.strokeStyle='rgba(0,200,255,0.3)';ctx.lineWidth=1.5;ctx.stroke();
+    for(let i=0;i<12;i++){const a=angle+i*(Math.PI*2/12);if(Math.cos(a)>-0.2){const x=CX+Math.cos(a)*R*.9,y=CY+Math.sin(i%3*.9)*R*.7;ctx.beginPath();ctx.arc(x,y,5,0,Math.PI*2);ctx.fillStyle='#22c55e';ctx.shadowBlur=8;ctx.shadowColor='#22c55e';ctx.fill();ctx.shadowBlur=0;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(CX,CY);ctx.strokeStyle='rgba(245,166,35,.2)';ctx.lineWidth=1;ctx.stroke();}}
+    angle+=0.008;requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ── CHART.JS SETUP ── */
+Chart.defaults.color='#64748b';Chart.defaults.borderColor='#1a3455';
+const chartCfg=(type,labels,data,label,color)=>({
+  type,data:{labels,datasets:[{label,data,backgroundColor:color||(type==='bar'?'rgba(0,200,255,0.5)':'rgba(0,200,255,0.15)'),borderColor:color&&type==='line'?color:'rgba(0,200,255,0.8)',borderWidth:2,fill:type==='line',tension:.4,pointBackgroundColor:'#00c8ff',pointRadius:3}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#94a3b8',font:{family:'DM Sans',size:11}}}},scales:{x:{ticks:{color:'#475569',font:{family:'DM Sans',size:11}},grid:{color:'rgba(26,52,85,.5)'}},y:{ticks:{color:'#475569',font:{family:'DM Sans',size:11}},grid:{color:'rgba(26,52,85,.5)'}}}}
+});
+
+setTimeout(()=>{
+  const C=(id,...a)=>{const e=document.getElementById(id);if(e)new Chart(e,chartCfg(...a));};
+  C('operatorChart','bar',['Op A','Op B','Op C','Op D'],[95,98,92,90],'Delivery %');
+  C('trafficChart','line',['12:00','14:00','16:00','18:00','19:00','20:00'],[2,3,3.5,4,4.8,5.6],'Traffic (M)');
+  C('predictionChart','line',['06:00','08:00','10:00','12:00','16:00','18:00','20:00','22:00'],[1.2,1.8,2.6,3,3.8,5.2,6.1,4.4],'Predicted Traffic (M)','rgba(139,92,246,0.9)');
+  C('opChartTab','bar',['Jio','Airtel','Vodafone','AT&T','T-Mobile','Orange'],[97,95,93,94,96,91],'Success %','rgba(34,197,94,.5)');
+
+  /* Drop-off chart */
+  const de=document.getElementById('dropoffChart');
+  if(de)new Chart(de,{type:'line',data:{labels:['Jan','Feb','Mar','Apr','May','Jun'],datasets:[{label:'Manual (% drop-off)',data:[10,10,9.8,9.5,9.2,9],borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,.1)',tension:.4,fill:true,borderWidth:2},{label:'With GMIX AI',data:[10,9,8,7.5,7,6.8],borderColor:'#22c55e',backgroundColor:'rgba(34,197,94,.1)',tension:.4,fill:true,borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#94a3b8'}}},scales:{x:{ticks:{color:'#475569'},grid:{color:'rgba(26,52,85,.5)'}},y:{ticks:{color:'#475569'},grid:{color:'rgba(26,52,85,.5)'},title:{display:true,text:'Drop-off %',color:'#475569'}}}}});
+
+  /* Revenue chart */
+  const re=document.getElementById('revenueChart');
+  if(re)new Chart(re,{type:'bar',data:{labels:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],datasets:[{label:'Monthly Revenue Impact ($)',data:[8000,16000,24000,28000,32000,36000,38000,40000,42000,44000,46000,48000],backgroundColor:'rgba(245,166,35,.5)',borderColor:'rgba(245,166,35,.9)',borderWidth:2,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#94a3b8'}}},scales:{x:{ticks:{color:'#475569'},grid:{color:'rgba(26,52,85,.5)'}},y:{ticks:{color:'#475569',callback:v=>'$'+v.toLocaleString()},grid:{color:'rgba(26,52,85,.5)'}}}}});
+
+  /* Workload chart */
+  const we=document.getElementById('workloadChart');
+  if(we)new Chart(we,{type:'doughnut',data:{labels:['Manual Reporting','Client Strategy','Optimization','Innovation','Admin'],datasets:[{label:'Before AI',data:[42,20,18,10,10],backgroundColor:['#ef4444','#3b82f6','#22c55e','#8b5cf6','#64748b'],borderWidth:0},{label:'After AI',data:[15,30,28,20,7],backgroundColor:['#ef444466','#3b82f699','#22c55e99','#8b5cf699','#64748b66'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:'#94a3b8',font:{size:11}}}}}});
+
+  /* Engagement chart */
+  const ee=document.getElementById('engagementChart');
+  if(ee)new Chart(ee,{type:'line',data:{labels:['Jan','Feb','Mar','Apr','May','Jun'],datasets:[{label:'Team Satisfaction %',data:[72,74,78,82,85,87],borderColor:'#8b5cf6',backgroundColor:'rgba(139,92,246,.1)',tension:.4,fill:true,borderWidth:2,pointRadius:3},{label:'Purpose Score %',data:[68,72,80,86,90,94],borderColor:'#f5a623',backgroundColor:'rgba(245,166,35,.1)',tension:.4,fill:true,borderWidth:2,pointRadius:3},{label:'Manual Work Reduced %',data:[5,15,28,38,46,50],borderColor:'#22c55e',backgroundColor:'rgba(34,197,94,.1)',tension:.4,fill:true,borderWidth:2,pointRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#94a3b8',font:{size:11}}}},scales:{x:{ticks:{color:'#475569'},grid:{color:'rgba(26,52,85,.5)'}},y:{ticks:{color:'#475569'},grid:{color:'rgba(26,52,85,.5)'},title:{display:true,text:'%',color:'#475569'}}}}});
+},300);
+
+/* ── RANKING ── */
+function buildRankingList(){
+  const c=document.getElementById('rankingList');if(!c)return;
+  const ranked=[...operators].sort(()=>Math.random()-.5).slice(0,8);
+  c.innerHTML=ranked.map((op,i)=>{const sc=Math.floor(Math.random()*15)+80;return `<div class="rank-item"><div class="rank-num" style="${i<3?'background:#2563eb;color:#fff':''}">${i+1}</div><div style="flex:1;font-size:13px">${op}</div><div class="rank-bar-wrap"><div class="rank-bar-fill" style="width:${sc}%"></div></div><div style="font-size:12px;color:var(--text3);width:32px;text-align:right">${sc}%</div></div>`;}).join('');
+}
+function refreshRanking(){buildRankingList();toast('🔄 Ranking refreshed');}
+buildRankingList();setInterval(buildRankingList,3000);
+
+/* ── FORECAST BARS ── */
+function buildForecastBars(){
+  const c=document.getElementById('forecastBarsContainer');if(!c)return;
+  c.innerHTML=operators.slice(0,8).map(op=>{const v=Math.floor(Math.random()*40)+55;return `<div class="fc-row"><div class="fc-lbl"><span>${op}</span><span id="fv-${op}">${v}%</span></div><div class="fc-track"><div class="fc-fill" id="fb-${op}" style="width:${v}%"></div></div></div>`;}).join('');
+}
+buildForecastBars();
+setInterval(()=>{operators.slice(0,8).forEach(op=>{const v=Math.floor(Math.random()*40)+55;const b=document.getElementById('fb-'+op),l=document.getElementById('fv-'+op);if(b)b.style.width=v+'%';if(l)l.textContent=v+'%';});},2500);
+
+function runForecast(){
+  const r=document.getElementById('forecastResult');r.style.display='block';r.style.borderColor='var(--greenDim)';r.style.color='#86efac';
+  r.innerHTML='✅ AI Campaign Forecast Complete:<br><br>• India OTP: 97.2% predicted success<br>• LATAM WhatsApp: 94.8%<br>• Africa A2P: 91.3%<br>• Europe RCS: 89.6%';
+  sysLog('Campaign forecast executed','good');toast('📊 Forecast complete!');
+}
+
+/* ── OPERATOR SWITCHER ── */
+function switchOperator(){
+  opIdx=(opIdx+1)%operators.length;const op=operators[opIdx];
+  ['kpi-operator','activeOperator'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=op;});
+  const fb=document.getElementById('routingSwitchFeedback');
+  if(fb){fb.style.display='block';fb.style.borderColor='var(--greenDim)';fb.style.color='#86efac';fb.innerHTML=`✅ Traffic rerouted to <strong>${op}</strong> at ${new Date().toLocaleTimeString()}`;}
+  sysLog(`Traffic rerouted to ${op}`,'good');toast(`🔀 Operator switched to ${op}`);
+}
+function optimizeRoute(){sysLog('Route optimization triggered','info');toast('⚡ Route optimized — 11% savings');}
+function applyRouting(){const fb=document.getElementById('routingFeedback');if(fb){fb.style.display='block';fb.style.borderColor='var(--greenDim)';fb.style.color='#86efac';fb.innerHTML='✅ Route B applied. Latency: 1.4s. Cost savings: 12%.';}sysLog('AI routing applied — Route B primary','good');toast('✅ Routing applied!');}
+function dismissRouting(){const fb=document.getElementById('routingFeedback');if(fb){fb.style.display='block';fb.style.borderColor='var(--redDim)';fb.style.color='#fca5a5';fb.innerHTML='⚠️ AI recommendation dismissed. Route A remains active.';}sysLog('AI routing dismissed','warn');toast('⚠️ Dismissed');}
+
+/* ── AI SIMULATION SCENARIOS ── */
+const scenarios={
+  otp:{steps:[{t:0,m:'[SIM] OTP traffic spike detected — +340% above baseline',c:'cl-warn'},{t:800,m:'[AI]  Analyzing traffic on Jio, Airtel, Vodafone...',c:'cl-info'},{t:1600,m:'[AI]  Route B capacity increased 40% via auto-scaling...',c:'cl-info'},{t:2400,m:'[AI]  Traffic redistributed across 3 operators.',c:'cl-good'},{t:3200,m:'[SIM] Delivery success maintained at 97.1% — resolved.',c:'cl-good'}],result:'OTP spike handled — 40% to Route B. Delivery: 97.1%.',net:'✅ STABLE | OTP Spike Resolved'},
+  operator:{steps:[{t:0,m:'[SIM] Operator X delivery rate: 82% — failure threshold hit',c:'cl-err'},{t:800,m:'[AI]  Failover triggered — switching to alternate operator...',c:'cl-warn'},{t:1600,m:'[AI]  Traffic rerouted to Operator B (98% DLR) in 180ms.',c:'cl-info'},{t:2400,m:'[AI]  All queued messages reprocessed — zero loss.',c:'cl-good'},{t:3200,m:'[SIM] Operator failure resolved. Network operational.',c:'cl-good'}],result:'Failover completed in 180ms. Zero message loss. DLR: 98%.',net:'✅ STABLE | Operator Failover Resolved'},
+  route:{steps:[{t:0,m:'[SIM] Route A congestion — latency 3.1s (threshold: 2.5s)',c:'cl-warn'},{t:800,m:'[AI]  Analyzing alternative routes — Route B optimal.',c:'cl-info'},{t:1600,m:'[AI]  60% traffic shifted to Route B.',c:'cl-info'},{t:2400,m:'[AI]  Route A latency normalized to 1.9s.',c:'cl-good'},{t:3200,m:'[SIM] Optimization complete — 12% cost savings.',c:'cl-good'}],result:'Congestion cleared. Route B primary. Savings: 12%.',net:'✅ OPTIMAL | Route Optimization Active'},
+  fraud:{steps:[{t:0,m:'[SIM] Anomalous pattern detected — possible grey route',c:'cl-err'},{t:800,m:'[AI]  Pattern: 98.2% match with SMS fraud signature.',c:'cl-warn'},{t:1600,m:'[AI]  Suspicious route blocked — flagged for review.',c:'cl-info'},{t:2400,m:'[AI]  Fraud report submitted to compliance engine.',c:'cl-info'},{t:3200,m:'[SIM] Fraud prevented — 0 fraudulent messages delivered.',c:'cl-good'}],result:'Fraud blocked. 0 messages delivered. Route flagged.',net:'✅ SECURE | Fraud Detection Active'}
+};
+
+function runScenario(type){
+  const s=scenarios[type];if(!s)return;
+  const con=document.getElementById('simConsole'),res=document.getElementById('simResultPanel'),ns=document.getElementById('simNetworkStatus'),sb=document.getElementById('netStatus');
+  con.innerHTML='<span class="cl-info">[System] Starting: '+type.toUpperCase()+'...</span>\n';
+  if(sb){sb.textContent='● SIMULATION RUNNING';sb.className='status-pill warn';}
+  if(res){res.style.display='block';res.style.borderColor='var(--border)';res.style.color='var(--text3)';res.innerHTML='Simulation in progress...';}
+  if(ns)ns.innerHTML='Status: <strong>RUNNING</strong><br>Scenario: '+type.toUpperCase();
+  s.steps.forEach(step=>{setTimeout(()=>{if(con)con.innerHTML+=`<span class="${step.c}">${step.m}</span>\n`;if(con)con.scrollTop=con.scrollHeight;sysLog(step.m,step.c.replace('cl-',''));},step.t);});
+  setTimeout(()=>{
+    if(res){res.style.borderColor='var(--greenDim)';res.style.color='#86efac';res.innerHTML='✅ '+s.result;}
+    if(ns)ns.innerHTML='Status: <strong>STABLE</strong><br>'+s.net+'<br>Delivery maintained: 97.1%';
+    if(sb){sb.textContent='● NETWORK OPERATIONAL';sb.className='status-pill';}
+    toast('✅ Simulation complete!');
+  },4500);
+}
+function clearSimConsole(){const c=document.getElementById('simConsole');if(c)c.innerHTML='';}
+
+/* ── ALERT INJECTION ── */
+function injectAlert(type,msg){
+  const a=document.getElementById('customAlertArea');if(!a)return;
+  const d=document.createElement('div');d.className=`alert a-${type}`;
+  d.innerHTML=msg+` <small style="opacity:.5">(${new Date().toLocaleTimeString()})</small>`;
+  a.prepend(d);sysLog(msg,type==='red'?'error':type==='amber'?'warn':'good');toast('Alert injected');
+}
+
+/* ── HEADER BUTTONS ── */
+function runHeaderSim(){runScenario('otp');showTab('simulation');toast('▶ AI Simulation started');}
+function runLiveDemo(){
+  sysLog('Live demo: OTP surge simulation','info');let i=0;
+  const iv=setInterval(()=>{ld.otpTotal+=Math.floor(Math.random()*150000);const e=document.getElementById('kpi-otpTotal');if(e)e.textContent=fmtNum(ld.otpTotal);if(++i>=20)clearInterval(iv);},120);
+  toast('📡 Live Demo: OTP surge running');
+}
+function runTrafficIncident(){runScenario('route');showTab('simulation');toast('⚠️ Traffic Incident simulation started');}
+let nocOn=false;
+function toggleNOCMode(){nocOn=!nocOn;document.body.style.background=nocOn?'#000407':'#050d1a';document.getElementById('mainContent').style.background=nocOn?'#000407':'#050d1a';toast(nocOn?'🖥 NOC dark mode activated':'🖥 SaaS mode restored');}
+
+/* ── FRAUD FEED ── */
+let fraudTotal=0;
+function updateFraud(){
+  const b=document.getElementById('fraudFeed');if(!b)return;
+  const n=Math.floor(Math.random()*3);if(n>0){fraudTotal+=n;const el=document.getElementById('fraudBlocked');if(el)el.textContent=fraudTotal;const d=document.createElement('div');d.className='alert a-red';d.innerHTML=`⚠️ [${new Date().toLocaleTimeString()}] ${n} suspicious A2P attempt(s) blocked on ${operators[Math.floor(Math.random()*operators.length)]}`;b.prepend(d);if(b.children.length>12)b.removeChild(b.lastChild);}
+}
+setInterval(updateFraud,3000);
+
+function blockRoute(){const f=document.getElementById('fraudActionFeedback');if(f){f.style.display='block';f.style.borderColor='var(--greenDim)';f.style.color='#86efac';f.innerHTML='✅ Suspicious route blocked.';}sysLog('Route blocked by user','warn');toast('🔒 Route blocked');}
+function scanRoutes(){sysLog('Full route scan initiated...','info');setTimeout(()=>sysLog('Scan complete — 2 grey routes flagged','warn'),2000);toast('🔍 Scanning routes…');}
+
+/* ── SPAM FEED ── */
+let spamTotal=0;
+function updateSpam(){
+  const b=document.getElementById('spamFeed');if(!b)return;
+  const n=Math.floor(Math.random()*150)+20;spamTotal+=n;const el=document.getElementById('spamCount');if(el)el.textContent=fmtNum(spamTotal);
+  const d=document.createElement('div');d.className='alert a-amber';d.innerHTML=`🚫 [${new Date().toLocaleTimeString()}] Spam filter blocked <strong>${n}</strong> messages from ${operators[Math.floor(Math.random()*operators.length)]}`;
+  b.prepend(d);if(b.children.length>12)b.removeChild(b.lastChild);
+}
+setInterval(updateSpam,3500);
+
+/* ── LOG ── */
+function clearLog(){const b=document.getElementById('systemLogBox');if(b)b.innerHTML='';toast('Log cleared');}
+function exportLog(){const b=document.getElementById('systemLogBox');if(!b)return;const blob=new Blob([b.innerText],{type:'text/plain'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='gmix_log_'+Date.now()+'.txt';a.click();toast('💾 Log exported');}
+
+/* ── AUTO EVENTS ── */
+const autoEvts=[
+  ()=>sysLog('Heartbeat check — all 24 routes healthy','good'),
+  ()=>sysLog(`Traffic update: ${fmtNum(ld.messages)} messages processed`,'info'),
+  ()=>sysLog('AI routing model refreshed — confidence 94.2%','info'),
+  ()=>sysLog('Cross-channel journey integrity check passed','good'),
+  ()=>sysLog('Revenue impact calculation updated','info'),
+  ()=>sysLog('Employee experience metrics synced','info'),
+];
+let autoIdx=0;setInterval(()=>{autoEvts[autoIdx%autoEvts.length]();autoIdx++;},6000);
+
+/* ── REVENUE CALCULATOR ── */
+function recalcRevenue(){
+  const j=parseInt(document.getElementById('rng-journeys').value);
+  const imp=parseInt(document.getElementById('rng-improve').value);
+  const avg=parseInt(document.getElementById('rng-avg').value);
+  document.getElementById('lbl-journeys').textContent=fmtNum(j);
+  document.getElementById('lbl-improve').textContent=imp+'%';
+  document.getElementById('lbl-avg').textContent='$'+avg;
+  const lost=j*.10;const recovered=lost*(imp/100);const conv=recovered*.05;const monthly=conv*avg;const annual=monthly*12;
+  document.getElementById('calc-result').textContent='$'+fmtNum(annual);
+  document.getElementById('calc-monthly').textContent='$'+fmtNum(monthly)+' / month · '+fmtNum(conv)+' conversions';
+}
+
+/* ── TIME SAVED CALCULATOR ── */
+function recalcTime(){
+  const teams=parseInt(document.getElementById('rng-teams').value);
+  const hrs=parseInt(document.getElementById('rng-hrs').value);
+  document.getElementById('lbl-teams').textContent=teams;
+  document.getElementById('lbl-hrs').textContent=hrs+' hrs';
+  const annual=teams*hrs*52;
+  document.getElementById('time-result').textContent=fmtNum(annual);
+  document.getElementById('time-sub').textContent=`hrs/yr across ${teams} team${teams>1?'s':''}`;
+}
+
+/* ── JOURNEY FIX ── */
+function applyJourneyFix(){
+  const r=document.getElementById('journeyFixResult');if(!r)return;
+  r.style.display='block';r.style.borderColor='var(--greenDim)';r.style.color='#86efac';
+  r.innerHTML='✅ AI recommendations applied:<br>• Pre-transition notifications enabled at all channel switches<br>• Session context carrier activated across RCS→SMS→WhatsApp<br>• Single-sign token deployed for WhatsApp→Email<br>• Agent auto-briefing active for Email→Voice<br><br>Expected drop-off improvement: <strong>−11.5%</strong>';
+  sysLog('Cross-channel journey AI recommendations applied','good');toast('⚡ Journey fixes applied!');
+}
+
+/* ── DROP-OFF SIMULATION ── */
+function runDropoffSim(){
+  const r=document.getElementById('dropoffResult');if(!r)return;
+  r.style.display='block';r.style.borderColor='var(--greenDim)';r.style.color='#86efac';
+  r.innerHTML='✅ AI Drop-off Improvement Simulation:<br><br>• Baseline lost: 100,000 interactions/month<br>• AI retention improvement: 20%<br>• Recovered: <strong>20,000 interactions</strong><br>• New drop-off rate: <strong>8%</strong> (down from 10%)<br>• Journey completion: <strong>75.6%</strong>';
+  const el=document.getElementById('recovered-count');if(el)el.textContent='20,000';
+  const el2=document.getElementById('retained-live');if(el2)el2.textContent='20,000';
+  sysLog('Drop-off simulation complete — 20K interactions recovered','good');toast('📉 Drop-off simulation complete!');
+}
+
+/* ── TEAM ROSTER ── */
+(function(){
+  const c=document.getElementById('teamRoster');if(!c)return;
+  const team=[
+    {name:'Employee A',avatar:'A',role:'Campaign Manager',kpi:'124 campaigns/mo',sub:'↑ 18% engagement'},
+    {name:'Employee B',avatar:'B',role:'Network Analyst',kpi:'98.2% uptime',sub:'3 incidents resolved'},
+    {name:'Employee C',avatar:'C',role:'Data Analyst',kpi:'5.2 hrs saved/wk',sub:'AI adopted fully'},
+    {name:'Employee D',avatar:'D',role:'Route Specialist',kpi:'12% cost reduction',sub:'Route B optimized'},
+    {name:'Employee E',avatar:'E',role:'Client Success',kpi:'4 QBRs delivered',sub:'NPS score: 87'},
+  ];
+  c.innerHTML=team.map(p=>`<div class="team-row"><div class="team-avatar">${p.avatar}</div><div><div class="team-name">${p.name}</div><div class="team-role">${p.role}</div></div><div class="team-right"><div class="team-kpi">${p.kpi}</div><div class="team-sub">${p.sub}</div></div></div>`).join('');
+})();
+
+/* ── INIT LOGS ── */
+sysLog('GMIX Intelligence Platform v3.0 initialised','good');
+sysLog('24 active routes loaded and healthy','good');
+sysLog('AI engine online — monitoring 5 communication channels','info');
+sysLog('NEW: Cross-channel journey tracking active','good');
+sysLog('NEW: Revenue impact model loaded — $480K annual potential','good');
+sysLog('NEW: HMW strategic pillars scorecard active','info');
+</script>
+</body>
+</html>
